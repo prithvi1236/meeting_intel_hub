@@ -1,0 +1,3 @@
+<%= turbo_frame_tag "project-stats-#{@project.id}" do %>
+  <%= render "dashboard/project_stats", project: @project %>
+<% end %>

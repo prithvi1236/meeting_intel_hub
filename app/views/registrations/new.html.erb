@@ -1,0 +1,31 @@
+<% content_for :title, "Sign up" %>
+<div class="mx-auto max-w-md">
+  <h1 class="mb-6 text-2xl font-semibold">Create account</h1>
+  <%= form_with model: @user, url: registrations_path, class: "space-y-4" do |f| %>
+    <% if @user.errors.any? %>
+      <div class="rounded-[8px] border border-[var(--mi-red)]/40 bg-[var(--mi-red)]/10 p-3 text-sm">
+        <%= @user.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+    <div>
+      <%= f.label :name, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.text_field :name, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+    <div>
+      <%= f.label :email, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.email_field :email, required: true, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+    <div>
+      <%= f.label :password, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.password_field :password, required: true, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+    <div>
+      <%= f.label :password_confirmation, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.password_field :password_confirmation, required: true, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+    <%= f.submit "Sign up", class: "w-full rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f] cursor-pointer" %>
+  <% end %>
+  <p class="mt-4 text-sm text-[var(--mi-text-secondary)]">
+    Already have an account? <%= link_to "Log in", new_session_path, class: "text-[var(--mi-teal)] underline" %>
+  </p>
+</div>

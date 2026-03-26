@@ -1,0 +1,20 @@
+<div class="flex <%= message.user? ? 'justify-end' : 'justify-start' %>">
+  <div class="max-w-[85%] rounded-[12px] border border-[var(--mi-border)] <%= message.user? ? 'bg-[var(--mi-teal)]/15' : 'bg-[var(--mi-bg)]' %> px-3 py-2 text-sm">
+    <p class="whitespace-pre-wrap"><%= message.content %></p>
+    <% if message.assistant? && message.citations.present? %>
+      <div class="mt-2 flex flex-wrap gap-1 border-t border-[var(--mi-border)] pt-2">
+        <% message.citations.each do |c| %>
+          <button
+            type="button"
+            class="rounded-full border border-[var(--mi-border)] px-2 py-0.5 text-xs font-mono-mi text-[var(--mi-text-secondary)] hover:border-[var(--mi-teal)]"
+            data-action="click->chat#handleCitation"
+            data-chunk-id="<%= c['chunk_id'] %>"
+            aria-label="Citation"
+          >
+            <%= c["meeting_title"] %> @ <%= c["timestamp"] %>s
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

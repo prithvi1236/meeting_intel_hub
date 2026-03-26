@@ -1,0 +1,25 @@
+<% content_for :title, "Projects" %>
+<% content_for :breadcrumb do %>
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> / Projects
+<% end %>
+
+<div class="mb-6 flex items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold">Projects</h1>
+  <%= link_to "New project", new_project_path, class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+</div>
+
+<% if @projects.empty? %>
+  <%= render "shared/empty_state", title: "No projects", body: "Create your first project to organize meetings.", cta_path: new_project_path, cta_label: "New project" %>
+<% else %>
+  <ul class="space-y-2">
+    <% @projects.each do |p| %>
+      <li class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 flex justify-between gap-4">
+        <div>
+          <%= link_to p.name, p, class: "font-medium hover:underline" %>
+          <p class="text-xs text-[var(--mi-text-secondary)]"><%= pluralize(p.meetings_count, "meeting") %></p>
+        </div>
+        <%= link_to "Open", p, class: "text-sm text-[var(--mi-teal)] self-center" %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

@@ -1,0 +1,7 @@
+<div class="mx-auto max-w-md rounded-[12px] border border-dashed border-[var(--mi-border)] bg-[var(--mi-surface)] px-6 py-12 text-center">
+  <h2 class="text-lg font-semibold"><%= title %></h2>
+  <p class="mt-2 text-sm text-[var(--mi-text-secondary)]"><%= body %></p>
+  <% if local_assigns[:cta_path] %>
+    <%= link_to cta_label, cta_path, class: "mt-6 inline-flex rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+  <% end %>
+</div>

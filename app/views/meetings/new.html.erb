@@ -1,0 +1,47 @@
+<% content_for :title, "New meeting" %>
+<% content_for :breadcrumb do %>
+  <%= link_to @project.name, @project %> / New meeting
+<% end %>
+
+<h1 class="mb-2 text-2xl font-semibold">Upload meeting</h1>
+<p class="mb-6 text-sm text-[var(--mi-text-secondary)]">Transcript formats: .txt, .vtt, .srt</p>
+
+<%= form_with model: [ @project, @meeting ], html: { multipart: true, class: "max-w-2xl space-y-6" } do |f| %>
+  <% if @meeting.errors.any? %>
+    <div class="rounded-[8px] border border-[var(--mi-red)]/40 bg-[var(--mi-red)]/10 p-3 text-sm">
+      <%= @meeting.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :title, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.text_field :title, required: true, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+    <div>
+      <%= f.label :meeting_date, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+      <%= f.date_field :meeting_date, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+    </div>
+  </div>
+
+  <div
+    data-controller="drag-drop"
+    data-drag-drop-highlight-class="border-teal-500 bg-teal-500/10"
+  >
+    <div
+      data-drag-drop-target="zone"
+      data-action="dragover->drag-drop#highlight dragleave->drag-drop#unhighlight drop->drag-drop#handleDrop click->drag-drop#openFilePicker"
+      class="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-8 text-center transition-colors"
+      role="button"
+      tabindex="0"
+      aria-label="Drop transcript file here or click to browse"
+    >
+      <p class="text-sm text-[var(--mi-text-secondary)]">Drag & drop transcript here, or click to browse</p>
+      <%= file_field_tag :transcript_file, direct_upload: false, class: "hidden", data: { drag_drop_target: "input", action: "change->drag-drop#handleSelect" } %>
+    </div>
+    <div data-drag-drop-target="error" class="mt-2 hidden text-sm text-[var(--mi-red)]" role="alert"></div>
+    <div data-drag-drop-target="preview" class="mt-4 space-y-2"></div>
+  </div>
+
+  <%= f.submit "Create meeting & process", class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f] cursor-pointer" %>
+<% end %>

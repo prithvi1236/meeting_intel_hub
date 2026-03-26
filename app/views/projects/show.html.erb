@@ -1,0 +1,49 @@
+<% content_for :title, @project.name %>
+<% content_for :breadcrumb do %>
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> / <%= @project.name %>
+<% end %>
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-semibold"><%= @project.name %></h1>
+    <p class="text-sm text-[var(--mi-text-secondary)]"><%= @project.description %></p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <%= link_to "Edit", edit_project_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
+    <%= link_to "Cross-meeting chat", project_chat_sessions_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
+    <%= link_to "Upload meeting", new_project_meeting_path(@project), class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+  </div>
+</div>
+
+<% if @meetings.empty? %>
+  <%= render "shared/empty_state",
+      title: "No meetings in this project",
+      body: "Upload a transcript to generate insights, action items, and sentiment.",
+      cta_path: new_project_meeting_path(@project),
+      cta_label: "Upload meeting" %>
+<% else %>
+  <ul class="space-y-2">
+    <% @meetings.each do |m| %>
+      <li class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 flex justify-between gap-4">
+        <div>
+          <%= link_to m.title, [ @project, m ], class: "font-medium hover:underline" %>
+          <p class="text-xs text-[var(--mi-text-secondary)] font-mono-mi">
+            <%= m.meeting_date&.to_fs(:long) || "No date" %> · <%= m.status %>
+          </p>
+        </div>
+        <%= link_to "Open", [ @project, m ], class: "text-sm text-[var(--mi-teal)] self-center" %>
+      </li>
+    <% end %>
+  </ul>
+  <% total_pages = (@meeting_total.to_f / @per_page).ceil %>
+  <% if total_pages > 1 %>
+    <div class="mt-6 flex gap-4 text-sm font-mono-mi">
+      <% if @page > 1 %>
+        <%= link_to "Previous", project_path(@project, page: @page - 1), class: "text-[var(--mi-teal)]" %>
+      <% end %>
+      <% if @page < total_pages %>
+        <%= link_to "Next", project_path(@project, page: @page + 1), class: "text-[var(--mi-teal)]" %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

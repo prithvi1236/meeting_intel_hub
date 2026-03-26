@@ -1,0 +1,22 @@
+<% content_for :title, "Project chats" %>
+<% content_for :breadcrumb do %>
+  <%= link_to @project.name, @project %> / Chats
+<% end %>
+
+<div class="mb-6 flex justify-between gap-4">
+  <h1 class="text-2xl font-semibold">Cross-meeting chats</h1>
+  <%= link_to "New chat", new_project_chat_session_path(@project), class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+</div>
+
+<% if @sessions.empty? %>
+  <%= render "shared/empty_state", title: "No project chats", body: "Start a chat that searches across all meetings in this project.", cta_path: new_project_chat_session_path(@project), cta_label: "New chat" %>
+<% else %>
+  <ul class="space-y-2">
+    <% @sessions.each do |s| %>
+      <li class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 flex justify-between">
+        <%= link_to s.title.presence || "Chat", project_chat_session_path(@project, s), class: "font-medium hover:underline" %>
+        <span class="text-xs text-[var(--mi-text-secondary)] font-mono-mi"><%= time_ago_in_words(s.updated_at) %> ago</span>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

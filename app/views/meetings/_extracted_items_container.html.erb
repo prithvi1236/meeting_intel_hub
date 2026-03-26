@@ -1,0 +1,46 @@
+<%= turbo_frame_tag "extracted-items-container" do %>
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "Export CSV", export_items_api_v1_meeting_path(meeting, format: :csv), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi" %>
+      <%= link_to "Export PDF", export_items_api_v1_meeting_path(meeting, format: :pdf), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi" %>
+      <%= button_to "Reprocess", reprocess_project_meeting_path(meeting.project, meeting), method: :post, class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi bg-transparent" %>
+    </div>
+
+    <% if meeting.processing? %>
+      <div class="space-y-2" aria-busy="true">
+        <% 4.times do %>
+          <div class="h-16 animate-pulse rounded-[12px] bg-[var(--mi-border)]/30"></div>
+        <% end %>
+      </div>
+    <% else %>
+      <% decisions = meeting.extracted_items.decisions.order(:position, :created_at) %>
+      <% actions = meeting.extracted_items.action_items.order(:position, :created_at) %>
+      <div class="space-y-4">
+        <div>
+          <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Decisions</p>
+          <% if decisions.any? %>
+            <div class="space-y-2">
+              <% decisions.each do |item| %>
+                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-[var(--mi-text-secondary)]">No decisions extracted.</p>
+          <% end %>
+        </div>
+        <div>
+          <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Action items</p>
+          <% if actions.any? %>
+            <div class="space-y-2">
+              <% actions.each do |item| %>
+                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-[var(--mi-text-secondary)]">No action items extracted.</p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full" data-controller="dark-mode">
+  <head>
+    <title><%= content_for(:title) || "Meeting Intelligence Hub" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    <style>
+      :root {
+        --mi-bg: #fafafa;
+        --mi-surface: #ffffff;
+        --mi-border: #e5e5e5;
+        --mi-text: #1a1a1a;
+        --mi-text-secondary: #5c5c5c;
+        --mi-teal: #00c7a8;
+        --mi-amber: #f5a623;
+        --mi-red: #e85d4a;
+        --mi-green: #4caf7d;
+      }
+      html.dark {
+        --mi-bg: #0f0f0f;
+        --mi-surface: #1a1a1a;
+        --mi-border: #2a2a2a;
+        --mi-text: #f2f2f2;
+        --mi-text-secondary: #8a8a8a;
+      }
+      body { font-family: "DM Sans", system-ui, sans-serif; }
+      .font-mono-mi { font-family: "DM Mono", ui-monospace, monospace; }
+    </style>
+  </head>
+  <body class="h-full bg-[var(--mi-bg)] text-[var(--mi-text)] antialiased">
+    <div class="flex min-h-full">
+      <aside
+        class="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--mi-border)] bg-[var(--mi-surface)]"
+        aria-label="Main navigation"
+      >
+        <div class="p-4 border-b border-[var(--mi-border)]">
+          <%= link_to root_path, class: "block font-semibold text-lg tracking-tight text-[var(--mi-text)]" do %>
+            Meeting<span class="text-[var(--mi-teal)]">Intel</span>
+          <% end %>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+          <% if authenticated? %>
+            <%= link_to "Dashboard", root_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
+            <%= link_to "Projects", projects_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
+            <% current_user.projects.order(:name).limit(12).each do |p| %>
+              <%= link_to p.name, p, class: "block truncate rounded-lg px-3 py-1.5 text-xs text-[var(--mi-text-secondary)] hover:text-[var(--mi-text)]" %>
+            <% end %>
+          <% else %>
+            <%= link_to "Log in", new_session_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
+            <%= link_to "Sign up", signup_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
+          <% end %>
+        </nav>
+        <div class="p-3 border-t border-[var(--mi-border)] space-y-2">
+          <% if authenticated? %>
+            <%= link_to "New project", new_project_path, class: "block text-center rounded-lg bg-[var(--mi-teal)] text-[#0f0f0f] py-2 text-sm font-medium" %>
+            <div class="flex items-center gap-2 px-2">
+              <div class="h-8 w-8 rounded-full bg-[var(--mi-border)] flex items-center justify-center text-xs font-mono-mi" aria-hidden="true">
+                <%= current_user.name&.first&.upcase || "U" %>
+              </div>
+              <div class="min-w-0 flex-1 text-xs text-[var(--mi-text-secondary)] truncate">
+                <%= current_user.email %>
+              </div>
+            </div>
+            <%= button_to "Log out", session_path, method: :delete, class: "w-full text-left text-xs text-[var(--mi-text-secondary)] px-2 py-1 hover:text-[var(--mi-text)]" %>
+          <% end %>
+        </div>
+      </aside>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-[var(--mi-border)] bg-[var(--mi-surface)]/95 px-4 backdrop-blur">
+          <button
+            type="button"
+            class="md:hidden rounded-lg border border-[var(--mi-border)] px-2 py-1 text-sm"
+            data-action="click->dark-mode#toggleNav"
+            aria-label="Open menu"
+          >
+            Menu
+          </button>
+          <div class="min-w-0 flex-1 text-sm text-[var(--mi-text-secondary)] truncate">
+            <%= yield :breadcrumb %>
+          </div>
+          <button
+            type="button"
+            class="rounded-lg border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi"
+            data-action="click->dark-mode#toggle"
+            aria-label="Toggle dark mode"
+          >
+            Theme
+          </button>
+        </header>
+
+        <div id="toasts" class="fixed right-4 top-16 z-50 flex w-80 max-w-[90vw] flex-col gap-2 pointer-events-none"></div>
+
+        <main class="flex-1 p-4 md:p-6">
+          <% if notice.present? %>
+            <div class="mb-4 rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 text-sm" role="status"><%= notice %></div>
+          <% end %>
+          <% if alert.present? %>
+            <div class="mb-4 rounded-xl border border-[var(--mi-red)]/40 bg-[var(--mi-red)]/10 px-4 py-3 text-sm" role="alert"><%= alert %></div>
+          <% end %>
+          <%= yield %>
+        </main>
+      </div>
+    </div>
+
+    <div
+      class="fixed inset-0 z-30 hidden bg-black/50 md:hidden"
+      data-dark-mode-target="overlay"
+      data-action="click->dark-mode#closeNav"
+    ></div>
+    <aside
+      class="fixed inset-y-0 left-0 z-40 w-[240px] -translate-x-full border-r border-[var(--mi-border)] bg-[var(--mi-surface)] transition-transform md:hidden"
+      data-dark-mode-target="drawer"
+      aria-label="Mobile navigation"
+    >
+      <div class="p-4 border-b border-[var(--mi-border)] flex justify-between items-center">
+        <%= link_to "MeetingIntel", root_path, class: "font-semibold" %>
+        <button type="button" class="text-sm" data-action="click->dark-mode#closeNav" aria-label="Close menu">Close</button>
+      </div>
+      <nav class="p-3 space-y-2">
+        <% if authenticated? %>
+          <%= link_to "Dashboard", root_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
+          <%= link_to "Projects", projects_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
+        <% else %>
+          <%= link_to "Log in", new_session_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
+          <%= link_to "Sign up", signup_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
+        <% end %>
+      </nav>
+    </aside>
+  </body>
+</html>

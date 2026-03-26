@@ -1,0 +1,26 @@
+<div id="<%= dom_id(item) %>" class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-3" data-controller="inline-edit">
+  <div data-inline-edit-target="display">
+    <p class="text-sm"><%= item.description %></p>
+    <div class="mt-2 flex flex-wrap gap-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]">
+      <% if item.action_item? && item.owner.present? %>
+        <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5"><%= item.owner %></span>
+      <% end %>
+      <% if item.due_date %>
+        <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Due <%= item.due_date.to_fs(:long) %></span>
+      <% end %>
+      <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Conf <%= item.confidence_score ? number_with_precision(item.confidence_score, precision: 2) : "—" %></span>
+      <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5"><%= item.status %></span>
+    </div>
+    <% if item.source_quote.present? %>
+      <p class="mt-2 text-xs text-[var(--mi-text-secondary)] italic line-clamp-3">“<%= item.source_quote %>”</p>
+    <% end %>
+    <button type="button" class="mt-2 text-xs text-[var(--mi-teal)]" data-action="click->inline-edit#showForm" aria-label="Edit item">Edit</button>
+  </div>
+  <div data-inline-edit-target="form" class="hidden">
+    <%= form_with model: [ project, meeting, item ] do |f| %>
+      <%= f.select :status, ExtractedItem.statuses.keys, {}, class: "w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-2 py-1 text-sm" %>
+      <%= f.submit "Save", class: "mt-2 rounded-[8px] bg-[var(--mi-teal)] px-3 py-1 text-xs text-[#0f0f0f] cursor-pointer" %>
+      <button type="button" class="ml-2 text-xs" data-action="click->inline-edit#cancel">Cancel</button>
+    <% end %>
+  </div>
+</div>

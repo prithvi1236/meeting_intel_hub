@@ -1,0 +1,13 @@
+<% content_for :title, "New project chat" %>
+<% content_for :breadcrumb do %>
+  <%= link_to @project.name, @project %> / New chat
+<% end %>
+
+<h1 class="mb-6 text-2xl font-semibold">New cross-meeting chat</h1>
+<%= form_with model: @chat_session, url: project_chat_sessions_path(@project), class: "max-w-md space-y-4" do |f| %>
+  <div>
+    <%= f.label :title, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+    <%= f.text_field :title, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+  </div>
+  <%= f.submit "Start chat", class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f] cursor-pointer" %>
+<% end %>

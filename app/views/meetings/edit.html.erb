@@ -1,0 +1,22 @@
+<% content_for :title, "Edit meeting" %>
+<% content_for :breadcrumb do %>
+  <%= link_to @project.name, @project %> / <%= link_to @meeting.title, [ @project, @meeting ] %> / Edit
+<% end %>
+
+<h1 class="mb-6 text-2xl font-semibold">Edit meeting</h1>
+<%= form_with model: [ @project, @meeting ], class: "max-w-xl space-y-4" do |f| %>
+  <% if @meeting.errors.any? %>
+    <div class="rounded-[8px] border border-[var(--mi-red)]/40 bg-[var(--mi-red)]/10 p-3 text-sm">
+      <%= @meeting.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div>
+    <%= f.label :title, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+    <%= f.text_field :title, required: true, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= f.label :meeting_date, class: "block text-sm text-[var(--mi-text-secondary)]" %>
+    <%= f.date_field :meeting_date, class: "mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+  </div>
+  <%= f.submit "Save", class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f] cursor-pointer" %>
+<% end %>

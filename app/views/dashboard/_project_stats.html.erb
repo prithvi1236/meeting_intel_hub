@@ -1,0 +1,9 @@
+<div class="flex flex-wrap gap-2 text-xs font-mono-mi">
+  <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Meetings <%= project.meetings_count %></span>
+  <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Actions <%= project.total_action_items_count %></span>
+  <% if project.overall_sentiment_score %>
+    <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5 <%= sentiment_color(project.overall_sentiment_score) %>">
+      Sentiment <%= number_with_precision(project.overall_sentiment_score, precision: 2) %>
+    </span>
+  <% end %>
+</div>

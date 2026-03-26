@@ -1,0 +1,53 @@
+<% content_for :title, "Dashboard" %>
+<% content_for :breadcrumb do %>
+  <span class="text-[var(--mi-text)]">Dashboard</span>
+<% end %>
+
+<div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-4">
+    <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Projects</p>
+    <p class="mt-2 text-2xl font-semibold"><%= @projects.size %></p>
+  </div>
+  <div class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-4">
+    <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Meetings</p>
+    <p class="mt-2 text-2xl font-semibold"><%= @total_meetings %></p>
+  </div>
+  <div class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-4">
+    <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Open action items</p>
+    <p class="mt-2 text-2xl font-semibold"><%= @open_action_items %></p>
+  </div>
+  <div class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-4">
+    <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Avg sentiment</p>
+    <p class="mt-2 text-2xl font-semibold <%= sentiment_color(@avg_sentiment) %>">
+      <%= @avg_sentiment ? number_with_precision(@avg_sentiment, precision: 2) : "—" %>
+    </p>
+  </div>
+</div>
+
+<% if @projects.empty? %>
+  <%= render "shared/empty_state",
+      title: "No projects yet",
+      body: "Create a project to start uploading meeting transcripts.",
+      cta_path: new_project_path,
+      cta_label: "New project" %>
+<% else %>
+  <div class="grid gap-4 md:grid-cols-2">
+    <% @projects.each do |project| %>
+      <div class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-5 flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-semibold"><%= project.name %></h2>
+            <p class="mt-1 text-sm text-[var(--mi-text-secondary)] line-clamp-2"><%= project.description.presence || "No description" %></p>
+          </div>
+        </div>
+        <%= turbo_frame_tag "project-stats-#{project.id}", src: dashboard_project_stats_path(project), loading: :lazy do %>
+          <div class="h-10 animate-pulse rounded-[8px] bg-[var(--mi-border)]/40" aria-hidden="true"></div>
+        <% end %>
+        <div class="flex flex-wrap gap-2 text-xs font-mono-mi">
+          <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Last meeting <%= project.last_meeting_date&.to_fs(:long) || "—" %></span>
+        </div>
+        <%= link_to "Open project", project, class: "mt-auto inline-flex justify-center rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

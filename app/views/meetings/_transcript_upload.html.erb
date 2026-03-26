@@ -1,0 +1,8 @@
+<%= turbo_frame_tag "transcript-upload-zone" do %>
+  <div id="transcript-upload-errors"></div>
+  <%= form_with url: project_meeting_transcripts_path(project, meeting), multipart: true, data: { turbo_frame: "transcript-upload-zone" } do %>
+    <label class="block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Replace transcript</label>
+    <%= file_field_tag :transcript_file, accept: ".txt,.vtt,.srt", class: "block w-full text-sm" %>
+    <%= submit_tag "Upload", class: "mt-2 rounded-[8px] bg-[var(--mi-teal)] px-3 py-1.5 text-xs font-medium text-[#0f0f0f] cursor-pointer" %>
+  <% end %>
+<% end %>
