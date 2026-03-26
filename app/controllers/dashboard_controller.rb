@@ -8,6 +8,6 @@ class DashboardController < ApplicationController
 
   def project_stats
     @project = current_user.projects.find(params[:id])
-    render partial: "dashboard/project_stats", locals: { project: @project }
+    render :project_stats
   end
 end

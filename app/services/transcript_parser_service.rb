@@ -80,16 +80,16 @@ class TranscriptParserService
           current_speaker = m[1].strip
           buf << m[2] if m[2].present?
           current_start = idx * 5
-        elsif (m = line.match(/\A([^:\[\]]{2,40}):\s*(.+)\z/))
-          flush.call(idx * 5)
-          current_speaker = m[1].strip
-          buf << m[2]
-          current_start = idx * 5
         elsif (m = line.match(/\A(.+?)\s*\((\d{1,2}:\d{2}(?::\d{2})?)\):\s*(.+)\z/))
           flush.call(timestamp_to_seconds(m[2]))
           current_speaker = m[1].strip
           buf << m[3]
           current_start = timestamp_to_seconds(m[2])
+        elsif (m = line.match(/\A([^:\[\]\(]{2,40}):\s*(.+)\z/))
+          flush.call(idx * 5)
+          current_speaker = m[1].strip
+          buf << m[2]
+          current_start = idx * 5
         else
           buf << line
         end

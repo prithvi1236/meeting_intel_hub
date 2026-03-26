@@ -76,5 +76,4 @@ class TranscriptProcessingJob < ApplicationJob
     def broadcast_step(meeting, step, status, extra = {})
       MeetingProcessingChannel.broadcast_to(meeting, { step: step, status: status }.merge(extra))
     end
-
 end

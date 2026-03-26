@@ -48,6 +48,7 @@ Rails.application.configure do
 
   # Use Solid Queue in development when running `bin/jobs` via Procfile.dev.
   config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true

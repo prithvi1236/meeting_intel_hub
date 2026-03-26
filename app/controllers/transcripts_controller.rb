@@ -21,11 +21,19 @@ class TranscriptsController < ApplicationController
     end
 
     fmt = File.extname(uploaded.original_filename).delete(".").downcase
-    @meeting.transcript&.destroy
-    transcript = @meeting.create_transcript!(file_name: uploaded.original_filename, file_format: fmt)
-    transcript.file.attach(uploaded)
-    @meeting.update!(status: :processing, processing_error: nil)
-    TranscriptProcessingJob.perform_later(transcript.id)
+
+    ActiveRecord::Base.transaction do
+      @meeting.transcript&.destroy!
+      transcript = Transcript.create!(
+        meeting: @meeting,
+        file_name: uploaded.original_filename,
+        file_format: fmt
+      )
+      transcript.file.attach(uploaded)
+
+      @meeting.update!(status: :processing, processing_error: nil)
+      TranscriptProcessingJob.perform_later(transcript.id)
+    end
 
     respond_to do |format|
       format.turbo_stream do

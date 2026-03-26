@@ -35,7 +35,11 @@ class MeetingsController < ApplicationController
       @meeting.save!
       if uploaded.present?
         fmt = File.extname(uploaded.original_filename).delete(".").downcase
-        tr = @meeting.create_transcript!(file_name: uploaded.original_filename, file_format: fmt)
+        tr = Transcript.create!(
+          meeting: @meeting,
+          file_name: uploaded.original_filename,
+          file_format: fmt
+        )
         tr.file.attach(uploaded)
         TranscriptProcessingJob.perform_later(tr.id)
       end
