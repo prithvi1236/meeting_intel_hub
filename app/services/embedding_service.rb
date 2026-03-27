@@ -1,48 +1,51 @@
-# Embeddings via Google Gemini API (same key as GEMINI_API_KEY).
-# Uses text-embedding-004 (768 dimensions). Chunk indexing vs query search use Gemini task types.
+# Embeddings via Hugging Face Inference API router.
+# Uses a 768-dim sentence-transformer model by default.
 class EmbeddingService
   class Error < StandardError; end
 
-  MODEL = ENV.fetch("GEMINI_EMBEDDING_MODEL", "text-embedding-004")
+  MODEL = ENV.fetch("HF_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
   MAX_ATTEMPTS = 3
-  # Gemini text-embedding-004 outputs 768 values (must match transcript_chunks.embedding column).
+  # Must match transcript_chunks.embedding vector dimension.
   DIMENSIONS = 768
 
   class << self
-    # task_type: "RETRIEVAL_DOCUMENT" for transcript chunks, "RETRIEVAL_QUERY" for user questions.
-    def generate(text, task_type: "RETRIEVAL_DOCUMENT")
+    # task_type/title are kept for call-site compatibility.
+    def generate(text, task_type: "RETRIEVAL_DOCUMENT", title: nil)
       text = text.to_s
       return [] if text.blank?
 
       key = "emb:#{task_type}:#{Digest::SHA256.hexdigest(text)}"
       Rails.cache.fetch(key, expires_in: 30.days) do
-        fetch_with_retry(text, task_type: task_type)
+        fetch_with_retry(text, task_type: task_type, title: title)
       end
     end
 
     private
-      def fetch_with_retry(text, task_type:)
-        return Array.new(DIMENSIONS, 0.0) if api_key.blank?
+      def fetch_with_retry(text, task_type:, title: nil)
+        return Array.new(DIMENSIONS, 0.0) if api_token.blank?
 
         attempt = 0
         begin
           attempt += 1
-          path = "/v1beta/models/#{MODEL}:embedContent"
-          response = client.post(path) do |req|
-            req.params["key"] = api_key
+          response = client.post("/hf-inference/models/#{MODEL}") do |req|
+            req.headers["Authorization"] = "Bearer #{api_token}"
             req.headers["Content-Type"] = "application/json"
             req.body = {
-              content: { parts: [ { text: text } ] },
-              taskType: task_type
+              inputs: text,
+              options: { wait_for_model: true }
             }.to_json
           end
-          raise Error, "Gemini embed error #{response.status}: #{response.body}" unless response.success?
+          raise Error, "Hugging Face embed error #{response.status}: #{response.body}" unless response.success?
 
           data = JSON.parse(response.body)
-          vec = data.dig("embedding", "values")
+          if data.is_a?(Hash) && data["error"].present?
+            raise Error, "Hugging Face embed error: #{data['error']}"
+          end
+
+          vec = normalize_vector(data)
           raise Error, "Missing embedding values" if vec.blank?
 
-          vec.map(&:to_f)
+          force_dimensions(vec)
         rescue StandardError => e
           raise e if attempt >= MAX_ATTEMPTS
 
@@ -52,13 +55,50 @@ class EmbeddingService
       end
 
       def client
-        @client ||= Faraday.new(url: "https://generativelanguage.googleapis.com") do |f|
+        @client ||= Faraday.new(url: "https://router.huggingface.co") do |f|
           f.adapter Faraday.default_adapter
         end
       end
 
-      def api_key
-        ENV["GEMINI_API_KEY"].to_s.presence
+      def normalize_vector(data)
+        return data.map(&:to_f) if numeric_array?(data)
+
+        if data.is_a?(Array) && data.any? && numeric_array?(data.first)
+          # Most transformer models return token embeddings (tokens x hidden_size).
+          # Average pooling gives a stable fixed-size sentence embedding.
+          dim = data.first.size
+          sums = Array.new(dim, 0.0)
+          count = 0
+
+          data.each do |row|
+            next unless numeric_array?(row)
+
+            row.each_with_index { |val, i| sums[i] += val.to_f }
+            count += 1
+          end
+          return [] if count.zero?
+
+          return sums.map { |s| s / count.to_f }
+        end
+
+        []
+      end
+
+      def numeric_array?(value)
+        value.is_a?(Array) && value.all? { |v| v.is_a?(Numeric) }
+      end
+
+      def force_dimensions(vec)
+        arr = vec.map(&:to_f)
+        if arr.size < DIMENSIONS
+          arr + Array.new(DIMENSIONS - arr.size, 0.0)
+        else
+          arr.first(DIMENSIONS)
+        end
+      end
+
+      def api_token
+        ENV["HUGGINGFACE_API_TOKEN"].to_s.presence
       end
   end
 end

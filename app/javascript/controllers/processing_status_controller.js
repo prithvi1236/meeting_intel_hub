@@ -27,6 +27,8 @@ export default class extends Controller {
         const ic = r.querySelector("[data-role=icon]")
         if (ic) ic.textContent = "✓"
       })
+      this.reloadFrame("extracted-items-container")
+      this.reloadFrame("sentiment-dashboard")
       return
     }
 
@@ -42,10 +44,24 @@ export default class extends Controller {
     if (data.status === "completed") {
       row.dataset.state = "done"
       if (icon) icon.textContent = "✓"
+      this.handleSectionRefresh(step)
     }
     if (data.status === "failed") {
       row.dataset.state = "error"
       if (icon) icon.textContent = "!"
+      this.handleSectionRefresh(step)
     }
+  }
+
+  handleSectionRefresh(step) {
+    if (step === "extract") this.reloadFrame("extracted-items-container")
+    if (step === "sentiment") this.reloadFrame("sentiment-dashboard")
+  }
+
+  reloadFrame(frameId) {
+    const frame = document.getElementById(frameId)
+    if (!frame || frame.tagName !== "TURBO-FRAME") return
+
+    frame.setAttribute("src", window.location.href)
   }
 }

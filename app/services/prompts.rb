@@ -1,19 +1,41 @@
 module Prompts
   EXTRACT_ITEMS = <<~PROMPT
-    You are an expert meeting analyst. Given the following meeting transcript,
-    extract all decisions made and action items assigned.
+    You are a precise meeting analyst. Extract decisions and action items from the transcript.
 
-    For DECISIONS: things the team formally agreed on or concluded.
-    For ACTION ITEMS: specific tasks assigned to named individuals with optional deadlines.
+    YOUR OUTPUT RULES - READ CAREFULLY:
 
-    Be precise. Use exact quotes from the transcript for source_quote.
-    Respond ONLY with valid JSON matching this schema (no markdown fences):
+    ## description field
+    - Write one short sentence in your own words (8-20 words).
+    - Never copy long transcript text into description.
+    - Never include timestamps (0:05:19, 00:46, etc.) in description.
+    - Never include speaker labels in description.
+    - Never include formatting artifacts like braces or brackets.
+
+    ## source_quote field
+    - Copy the shortest verbatim phrase (5-20 words max) proving the item.
+    - This is the key evidence phrase only, not a paragraph.
+    - Strip timestamps and speaker labels from the quote.
+
+    ## owner field (action items only)
+    - Person responsible for the task.
+    - Return a clean name only, or an empty string if not assigned.
+
+    ## DECISION vs ACTION ITEM
+    - Decision: group agreed, approved, or concluded something.
+    - Action item: concrete follow-up task someone should do.
+    - The same statement can produce both a decision and an action item.
+
+    ## General rules
+    - Return empty arrays if nothing qualifies.
+    - source_timestamp is integer seconds; use 0 if unclear.
+
+    Respond ONLY with valid JSON. No markdown fences, no extra text.
     {
       "decisions": [
-        {"description": "string", "source_quote": "string", "source_timestamp": 0, "confidence": 0.0}
+        {"description":"string","source_quote":"string","source_timestamp":0,"confidence":0.0}
       ],
       "action_items": [
-        {"description": "string", "owner": "string or empty", "due_date": "YYYY-MM-DD or null", "source_quote": "string", "source_timestamp": 0, "confidence": 0.0}
+        {"description":"string","owner":"string or empty","due_date":"YYYY-MM-DD or null","source_quote":"string","source_timestamp":0,"confidence":0.0}
       ]
     }
 
@@ -48,13 +70,13 @@ module Prompts
 
   CHAT_SYSTEM = <<~PROMPT
     You are an intelligent meeting assistant with access to transcript excerpts from
-    one or more meetings. Answer the user's question based ONLY on the provided context.
+    one or more meetings. Answer the user's question based only on the provided context.
 
-    Always cite your sources by referencing the meeting name and approximate timestamp.
+    Always cite sources by referencing the meeting name and approximate timestamp.
     If the answer cannot be found in the provided context, say so clearly.
-    Be concise and direct. Format action items and decisions as bullet points.
+    Be concise and direct.
 
-    At the end, output a JSON line starting with CITATIONS_JSON: followed by an array of objects:
+    At the end, output a JSON line starting with CITATIONS_JSON: followed by:
     [{"chunk_id":"uuid","meeting_title":"...","timestamp":0,"quote":"..."}]
 
     Context from meeting transcripts:

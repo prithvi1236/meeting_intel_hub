@@ -5,4 +5,11 @@
     <%= file_field_tag :transcript_file, accept: ".txt,.vtt,.srt", class: "block w-full text-sm" %>
     <%= submit_tag "Upload", class: "mt-2 rounded-[8px] bg-[var(--mi-teal)] px-3 py-1.5 text-xs font-medium text-[#0f0f0f] cursor-pointer" %>
   <% end %>
+  <% if meeting.transcript.present? %>
+    <%= button_to "Delete transcript",
+          project_meeting_transcript_path(project, meeting, meeting.transcript),
+          method: :delete,
+          class: "mt-3 rounded-[8px] border border-[var(--mi-red)] px-3 py-1.5 text-xs text-[var(--mi-red)]",
+          form: { data: { turbo_confirm: "Delete this transcript from the meeting?" } } %>
+  <% end %>
 <% end %>

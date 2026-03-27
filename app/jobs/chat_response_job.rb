@@ -26,7 +26,7 @@ class ChatResponseJob < ApplicationJob
       }
     end
 
-    result = GeminiService.chat_with_context(user_messages: history, context_chunks: context) do |token|
+    result = GroqService.chat_with_context(user_messages: history, context_chunks: context) do |token|
       ChatStreamingChannel.broadcast_to(session, { type: "token", content: token })
     end
 
@@ -47,5 +47,11 @@ class ChatResponseJob < ApplicationJob
 
     assistant.update!(content: body, citations: citations)
     ChatStreamingChannel.broadcast_to(session, { type: "done", citations: citations })
+  rescue StandardError => e
+    assistant&.update!(
+      content: "Sorry, I could not generate a response right now. #{e.message.to_s.first(180)}",
+      citations: []
+    )
+    ChatStreamingChannel.broadcast_to(session, { type: "done", citations: [] }) if session
   end
 end

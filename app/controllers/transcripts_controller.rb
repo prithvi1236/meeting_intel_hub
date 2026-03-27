@@ -22,6 +22,7 @@ class TranscriptsController < ApplicationController
 
     fmt = File.extname(uploaded.original_filename).delete(".").downcase
 
+    transcript_id = nil
     ActiveRecord::Base.transaction do
       @meeting.transcript&.destroy!
       transcript = Transcript.create!(
@@ -30,10 +31,11 @@ class TranscriptsController < ApplicationController
         file_format: fmt
       )
       transcript.file.attach(uploaded)
+      transcript_id = transcript.id
 
       @meeting.update!(status: :processing, processing_error: nil)
-      TranscriptProcessingJob.perform_later(transcript.id)
     end
+    TranscriptProcessingJob.perform_later(transcript_id)
 
     respond_to do |format|
       format.turbo_stream do

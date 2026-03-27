@@ -27,6 +27,7 @@ export default class extends Controller {
 
   receive(data) {
     if (data.type === "token") {
+      this.bumpTypingTimeout()
       const bubble = this.activeBubble()
       if (bubble) bubble.textContent += data.content
       this.scrollToBottom()
@@ -49,14 +50,18 @@ export default class extends Controller {
 
   prepareSubmit() {
     this.toggleTyping(true)
+    this.startTypingTimeout()
     if (this.hasInputTarget) this.inputTarget.disabled = true
   }
 
-  turboAfterSubmit() {
+  turboAfterSubmit(event) {
+    // If submission failed before a streaming job starts, reset UI immediately.
+    if (event?.detail?.success === false) this.finishStream()
     if (this.hasInputTarget) this.inputTarget.value = ""
   }
 
   finishStream() {
+    this.clearTypingTimeout()
     this.toggleTyping(false)
     if (this.hasInputTarget) {
       this.inputTarget.disabled = false
@@ -79,5 +84,21 @@ export default class extends Controller {
   toggleTyping(show) {
     if (!this.hasTypingTarget) return
     this.typingTarget.classList.toggle("hidden", !show)
+  }
+
+  startTypingTimeout() {
+    this.clearTypingTimeout()
+    this.typingTimer = setTimeout(() => this.finishStream(), 30000)
+  }
+
+  bumpTypingTimeout() {
+    if (!this.typingTimer) return
+    this.startTypingTimeout()
+  }
+
+  clearTypingTimeout() {
+    if (!this.typingTimer) return
+    clearTimeout(this.typingTimer)
+    this.typingTimer = null
   }
 }

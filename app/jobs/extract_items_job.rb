@@ -14,7 +14,7 @@ class ExtractItemsJob < ApplicationJob
     segments = transcript.parsed_segments
     text = segments.map { |s| "#{s['speaker']}: #{s['text']}" }.join("\n").truncate(48_000)
 
-    data = GeminiService.extract_items(text)
+    data = GroqService.extract_items(text)
 
     meeting.extracted_items.destroy_all
     pos = 0
@@ -47,7 +47,7 @@ class ExtractItemsJob < ApplicationJob
       )
     end
 
-    Turbo::StreamsChannel.broadcast_replace_later_to(
+    Turbo::StreamsChannel.broadcast_replace_to(
       "meeting_#{meeting.id}",
       target: "extracted-items-container",
       partial: "meetings/extracted_items_container",
@@ -56,8 +56,19 @@ class ExtractItemsJob < ApplicationJob
 
     MeetingProcessingChannel.broadcast_to(meeting, { step: "extract", status: "completed" })
     MeetingPipeline.mark_extract!(meeting_id)
-  rescue Date::Error, JSON::ParserError, GeminiService::Error
-    MeetingProcessingChannel.broadcast_to(meeting, { step: "extract", status: "completed" })
+  rescue Date::Error, JSON::ParserError, HuggingFaceService::Error, GroqService::Error => e
+    meeting&.update(processing_error: "Item extraction failed: #{e.message.to_s.first(220)}")
+    MeetingProcessingChannel.broadcast_to(
+      meeting,
+      { step: "extract", status: "failed", message: e.message.to_s.first(220) }
+    )
+    MeetingPipeline.mark_extract!(meeting_id)
+  rescue StandardError => e
+    meeting&.update(processing_error: "Item extraction failed: #{e.message.to_s.first(220)}")
+    MeetingProcessingChannel.broadcast_to(
+      meeting,
+      { step: "extract", status: "failed", message: e.message.to_s.first(220) }
+    )
     MeetingPipeline.mark_extract!(meeting_id)
   end
 end

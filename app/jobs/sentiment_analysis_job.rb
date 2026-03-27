@@ -40,7 +40,7 @@ class SentimentAnalysisJob < ApplicationJob
 
     meeting.update!(sentiment_data: payload, overall_sentiment_score: overall)
 
-    Turbo::StreamsChannel.broadcast_replace_later_to(
+    Turbo::StreamsChannel.broadcast_replace_to(
       "meeting_#{meeting.id}",
       target: "sentiment-dashboard",
       partial: "meetings/sentiment_dashboard",
@@ -64,7 +64,7 @@ class SentimentAnalysisJob < ApplicationJob
         text = lines.map { |s| "#{s['speaker']}: #{s['text']}" }.join("\n")
         if text.present?
           begin
-            res = GeminiService.analyse_sentiment_window(text)
+            res = HuggingFaceService.analyse_sentiment_window(text)
             windows << {
               "window_start" => start,
               "window_end" => finish,
@@ -73,7 +73,7 @@ class SentimentAnalysisJob < ApplicationJob
               "dominant_emotion" => res["dominant_emotion"],
               "speakers" => Array(res["speakers"])
             }
-          rescue GeminiService::Error
+          rescue HuggingFaceService::Error
             windows << {
               "window_start" => start,
               "window_end" => finish,
@@ -94,14 +94,14 @@ class SentimentAnalysisJob < ApplicationJob
       by.map do |name, segs|
         lines = segs.map { |s| "#{s['start_time']}s: #{s['text']}" }.join("\n")
         begin
-          res = GeminiService.analyse_speaker_sentiment(name, lines)
+          res = HuggingFaceService.analyse_speaker_sentiment(name, lines)
           {
             "name" => name,
             "average_score" => res["average_score"].to_f,
             "dominant_emotion" => res["dominant_emotion"],
             "segment_count" => res["segment_count"].to_i
           }
-        rescue GeminiService::Error
+        rescue HuggingFaceService::Error
           {
             "name" => name,
             "average_score" => 0.0,

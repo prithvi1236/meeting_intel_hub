@@ -56,16 +56,19 @@ class TranscriptParserService
       lines = content.split(/\r?\n/)
       current_speaker = "Speaker"
       current_start = 0
+      current_end = 10
       buf = []
 
-      flush = lambda do |end_t|
+      flush = lambda do |end_t = nil|
         text = buf.join(" ").strip
         if text.present?
+          finish = end_t.presence || current_end
+          finish = current_start + 10 if finish.to_i <= current_start.to_i
           segments << {
             "speaker" => current_speaker,
             "text" => text,
             "start_time" => current_start,
-            "end_time" => end_t
+            "end_time" => finish.to_i
           }
         end
         buf.clear
@@ -75,26 +78,39 @@ class TranscriptParserService
         line = line.strip
         next if line.blank?
 
-        if (m = line.match(/\A\[([^\]]+)\]\s*(.*)\z/))
+        if (m = line.match(/\A(\d{1,2}:\d{2}(?::\d{2})?)\s*[-=]+>\s*(\d{1,2}:\d{2}(?::\d{2})?)\z/))
+          flush.call
+          current_start = timestamp_to_seconds(m[1])
+          current_end = timestamp_to_seconds(m[2])
+          current_speaker = "Speaker"
+        elsif (m = line.match(/\A\[([^\]]+)\]\s*(.*)\z/))
           flush.call(idx * 5)
           current_speaker = m[1].strip
           buf << m[2] if m[2].present?
           current_start = idx * 5
+          current_end = current_start + 10
         elsif (m = line.match(/\A(.+?)\s*\((\d{1,2}:\d{2}(?::\d{2})?)\):\s*(.+)\z/))
           flush.call(timestamp_to_seconds(m[2]))
           current_speaker = m[1].strip
           buf << m[3]
           current_start = timestamp_to_seconds(m[2])
+          current_end = current_start + 10
+        elsif speaker_only_line?(line)
+          flush.call
+          current_speaker = line
+          current_start = idx * 5 if current_start.to_i.zero?
+          current_end = [ current_end.to_i, current_start.to_i + 10 ].max
         elsif (m = line.match(/\A([^:\[\]\(]{2,40}):\s*(.+)\z/))
           flush.call(idx * 5)
           current_speaker = m[1].strip
           buf << m[2]
           current_start = idx * 5
+          current_end = current_start + 10
         else
           buf << line
         end
       end
-      flush.call(segments.last&.fetch("end_time", 0).to_i + 10)
+      flush.call
       segments.reject { |s| s["text"].blank? }
     end
 
@@ -122,6 +138,17 @@ class TranscriptParserService
         else
           [ "Speaker", raw ]
         end
+      end
+
+      def speaker_only_line?(line)
+        candidate = line.to_s.strip
+        return false if candidate.blank?
+        return false if candidate.match?(/\A\d{1,2}:\d{2}(?::\d{2})?\z/)
+        return false if candidate.match?(/\A\d{1,2}:\d{2}(?::\d{2})?\s*[-=]+>\s*\d{1,2}:\d{2}(?::\d{2})?\z/)
+        return false if candidate.include?(":")
+        return false if candidate.length > 40
+
+        candidate.match?(/\A[[:alpha:]][[:alnum:] .'\-]{0,39}\z/)
       end
   end
 end

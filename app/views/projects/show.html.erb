@@ -12,6 +12,11 @@
     <%= link_to "Edit", edit_project_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
     <%= link_to "Cross-meeting chat", project_chat_sessions_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
     <%= link_to "Upload meeting", new_project_meeting_path(@project), class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+    <%= button_to "Delete project",
+          project_path(@project),
+          method: :delete,
+          class: "rounded-[8px] border border-[var(--mi-red)] px-3 py-2 text-sm text-[var(--mi-red)]",
+          form: { data: { turbo_confirm: "Delete this project and all its meetings?" } } %>
   </div>
 </div>
 

@@ -31,6 +31,7 @@ class MeetingsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
 
+    transcript_id = nil
     ActiveRecord::Base.transaction do
       @meeting.save!
       if uploaded.present?
@@ -41,9 +42,11 @@ class MeetingsController < ApplicationController
           file_format: fmt
         )
         tr.file.attach(uploaded)
-        TranscriptProcessingJob.perform_later(tr.id)
+        transcript_id = tr.id
+        @meeting.update!(status: :processing, processing_error: nil)
       end
     end
+    TranscriptProcessingJob.perform_later(transcript_id) if transcript_id
     redirect_to project_meeting_path(@project, @meeting), notice: "Meeting created."
   rescue ActiveRecord::RecordInvalid
     render :new, status: :unprocessable_entity
