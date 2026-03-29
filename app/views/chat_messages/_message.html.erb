@@ -1,4 +1,4 @@
-<div class="flex <%= message.user? ? 'justify-end' : 'justify-start' %>">
+<div class="flex <%= message.user? ? 'justify-end' : 'justify-start' %>" id="<%= dom_id(message) %>">
   <div class="max-w-[85%] rounded-[12px] border border-[var(--mi-border)] <%= message.user? ? 'bg-[var(--mi-teal)]/15' : 'bg-[var(--mi-bg)]' %> px-3 py-2 text-sm">
     <p class="whitespace-pre-wrap"><%= message.content %></p>
     <% if message.assistant? && message.citations.present? %>

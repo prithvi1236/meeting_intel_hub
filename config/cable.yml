@@ -1,9 +1,13 @@
-# Async adapter only works within the same process, so for manually triggering cable updates from a console,
-# and seeing results in the browser, you must do so from the web console (running inside the dev process),
-# not a terminal started via bin/rails console! Add "console" to any action or any ERB template view
-# to make the web console appear.
+# Development uses Solid Cable (PostgreSQL) so broadcasts from bin/jobs (Solid Queue) reach the browser.
+# The default "async" adapter is in-memory per process — ChatResponseJob / ExtractItemsJob would never
+# deliver tokens to clients when jobs run in a separate process from Puma.
 development:
-  adapter: async
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
 
 test:
   adapter: test

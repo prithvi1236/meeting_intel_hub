@@ -26,13 +26,22 @@ class ChatResponseJob < ApplicationJob
       }
     end
 
+    wire = +""
+    visible_sent = 0
     result = GroqService.chat_with_context(user_messages: history, context_chunks: context) do |token|
-      ChatStreamingChannel.broadcast_to(session, { type: "token", content: token })
+      wire << token
+      cut = wire.index(/CITATIONS_JSON\s*:/i)
+      visible = cut ? wire[0, cut] : wire
+      next if visible.length <= visible_sent
+
+      ChatStreamingChannel.broadcast_to(session, { type: "token", content: visible[visible_sent..] })
+      visible_sent = visible.length
     end
 
     full_text = result[:text].to_s
     citations = result[:citations].presence
-    body = full_text.gsub(/CITATIONS_JSON:\s*\[[\s\S]*?\]\s*\z/m, "").strip
+    citations = ChatCitationFormatter.citations_from_text(full_text) if citations.blank?
+    body = ChatCitationFormatter.strip_machine_suffix(full_text)
 
     if citations.blank?
       citations = context.first(3).map do |c|
@@ -46,12 +55,33 @@ class ChatResponseJob < ApplicationJob
     end
 
     assistant.update!(content: body, citations: citations)
-    ChatStreamingChannel.broadcast_to(session, { type: "done", citations: citations })
+    broadcast_final_chat_message(session, assistant)
+    ChatStreamingChannel.broadcast_to(
+      session,
+      { type: "done", citations: citations, content: body }
+    )
   rescue StandardError => e
     assistant&.update!(
       content: "Sorry, I could not generate a response right now. #{e.message.to_s.first(180)}",
       citations: []
     )
-    ChatStreamingChannel.broadcast_to(session, { type: "done", citations: [] }) if session
+    broadcast_final_chat_message(session, assistant) if session && assistant&.persisted?
+    ChatStreamingChannel.broadcast_to(
+      session,
+      { type: "done", citations: [], content: assistant&.content }
+    ) if session
   end
+
+  private
+
+    def broadcast_final_chat_message(session, assistant)
+      return unless assistant&.persisted?
+
+      Turbo::StreamsChannel.broadcast_replace_to(
+        "chat_session_#{session.id}",
+        target: ActionView::RecordIdentifier.dom_id(assistant),
+        partial: "chat_messages/message",
+        locals: { message: assistant.reload }
+      )
+    end
 end

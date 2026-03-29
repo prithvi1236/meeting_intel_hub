@@ -33,6 +33,8 @@ export default class extends Controller {
       this.scrollToBottom()
     }
     if (data.type === "done") {
+      const bubble = this.activeBubble()
+      if (bubble && data.content != null) bubble.textContent = data.content
       this.finishStream()
     }
   }

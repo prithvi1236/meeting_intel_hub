@@ -14,7 +14,12 @@ class ExtractItemsJob < ApplicationJob
     segments = transcript.parsed_segments
     text = segments.map { |s| "#{s['speaker']}: #{s['text']}" }.join("\n").truncate(48_000)
 
-    data = GroqService.extract_items(text)
+    data = GroqService.extract_items(text) do |chunk|
+      MeetingProcessingChannel.broadcast_to(
+        meeting,
+        { step: "extract", status: "streaming", content: chunk }
+      )
+    end
 
     meeting.extracted_items.destroy_all
     pos = 0

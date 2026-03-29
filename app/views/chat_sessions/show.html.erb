@@ -12,6 +12,8 @@
   </p>
 <% end %>
 
+<%= turbo_stream_from "chat_session_#{@chat_session.id}" %>
+
 <div
   class="mx-auto flex h-[min(75vh,680px)] max-w-3xl flex-col rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)]"
   data-controller="chat"

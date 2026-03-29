@@ -6,6 +6,7 @@
 <% end %>
 
 <%= turbo_stream_from "meeting_#{@meeting.id}" %>
+<%= turbo_stream_from "chat_session_#{@chat_session.id}" %>
 
 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
   <div>
@@ -33,9 +34,19 @@
   <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-3">Processing</p>
   <ul class="space-y-2 text-sm">
     <% %w[parsing embedding extract sentiment].each do |step| %>
-      <li class="flex items-center gap-2" data-step="<%= step %>" data-state="idle">
-        <span data-role="icon" class="font-mono-mi w-4 text-center text-[var(--mi-text-secondary)]">·</span>
-        <span><%= step.humanize %></span>
+      <li class="flex flex-col gap-1" data-step="<%= step %>" data-state="idle">
+        <div class="flex items-center gap-2">
+          <span data-role="icon" class="font-mono-mi w-4 text-center text-[var(--mi-text-secondary)]">·</span>
+          <span><%= step.humanize %></span>
+        </div>
+        <% if step == "extract" %>
+          <pre
+            class="mt-1 hidden max-h-28 w-full overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words rounded-[6px] border border-[var(--mi-border)] bg-[var(--mi-bg)] p-2 text-[10px] font-mono-mi leading-snug text-[var(--mi-text-secondary)]"
+            data-role="extract-stream"
+            aria-live="polite"
+            aria-label="Extraction output preview"
+          ></pre>
+        <% end %>
       </li>
     <% end %>
   </ul>

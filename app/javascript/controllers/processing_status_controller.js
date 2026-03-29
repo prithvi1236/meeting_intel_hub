@@ -21,7 +21,19 @@ export default class extends Controller {
   }
 
   applyStep(data) {
+    if (data.step === "extract" && data.status === "streaming") {
+      const row = this.element.querySelector('[data-step="extract"]')
+      const pre = row?.querySelector("[data-role=extract-stream]")
+      if (pre && data.content != null) {
+        pre.classList.remove("hidden")
+        pre.textContent += data.content
+      }
+      return
+    }
+
     if (data.step === "complete" && data.status === "completed") {
+      const extractRow = this.element.querySelector('[data-step="extract"]')
+      if (extractRow) this.resetExtractStreamPreview(extractRow)
       this.element.querySelectorAll("[data-step]").forEach((r) => {
         r.dataset.state = "done"
         const ic = r.querySelector("[data-role=icon]")
@@ -40,17 +52,27 @@ export default class extends Controller {
     if (data.status === "started") {
       row.dataset.state = "active"
       if (icon) icon.textContent = "…"
+      if (step === "extract") this.resetExtractStreamPreview(row)
     }
     if (data.status === "completed") {
       row.dataset.state = "done"
       if (icon) icon.textContent = "✓"
+      if (step === "extract") this.resetExtractStreamPreview(row)
       this.handleSectionRefresh(step)
     }
     if (data.status === "failed") {
       row.dataset.state = "error"
       if (icon) icon.textContent = "!"
+      if (step === "extract") this.resetExtractStreamPreview(row)
       this.handleSectionRefresh(step)
     }
+  }
+
+  resetExtractStreamPreview(row) {
+    const pre = row?.querySelector("[data-role=extract-stream]")
+    if (!pre) return
+    pre.textContent = ""
+    pre.classList.add("hidden")
   }
 
   handleSectionRefresh(step) {

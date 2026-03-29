@@ -44,23 +44,18 @@ class HuggingFaceService
 
     # Yields token-sized slices for ActionCable; returns { text:, citations: }.
     def chat_with_context(user_messages:, context_chunks:)
-      context = context_chunks.map { |c| "- (#{c[:meeting_title]} @ #{c[:start_time]}s): #{c[:content]}" }.join("\n")
+      context = context_chunks.map do |c|
+        "- [chunk_id=#{c[:chunk_id]}] (#{c[:meeting_title]} @ #{c[:start_time]}s): #{c[:content]}"
+      end.join("\n")
       system = Prompts::CHAT_SYSTEM.sub("{{context}}", context.truncate(80_000))
       user_block = user_messages.map { |m| "#{m[:role]}: #{m[:content]}" }.join("\n\n")
       full_text = generate_text(user_block, system_instruction: system, max_tokens: 4096)
 
-      full_text.scan(/.{1,32}/m).each { |slice| yield slice } if block_given?
-      { text: full_text, citations: parse_citations_from_text(full_text) }
-    end
-
-    def parse_citations_from_text(text)
-      if (m = text.match(/CITATIONS_JSON:\s*(\[[\s\S]*?\])/m))
-        JSON.parse(m[1])
-      else
-        []
+      if block_given?
+        visible = ChatCitationFormatter.strip_machine_suffix(full_text)
+        visible.scan(/.{1,32}/m) { |slice| yield slice }
       end
-    rescue JSON::ParserError
-      []
+      { text: full_text, citations: ChatCitationFormatter.citations_from_text(full_text) }
     end
 
     private
