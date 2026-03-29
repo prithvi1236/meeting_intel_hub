@@ -76,6 +76,7 @@ export default class extends Controller {
   }
 
   handleSectionRefresh(step) {
+    if (step === "parsing") this.reloadFrame("transcript-summary")
     if (step === "extract") this.reloadFrame("extracted-items-container")
     if (step === "sentiment") this.reloadFrame("sentiment-dashboard")
   }

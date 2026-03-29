@@ -4,19 +4,18 @@ class TranscriptsController < ApplicationController
 
   def create
     uploaded = params[:transcript_file]
-    unless uploaded.present?
-      return redirect_to project_meeting_path(@project, @meeting), alert: "Choose a file."
-    end
-    unless allowed_extension?(uploaded.original_filename)
+    errors = TranscriptUploadValidator.validate(uploaded)
+    if errors.any?
+      msg = errors.first
       return respond_to do |format|
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
             "transcript-upload-errors",
             partial: "shared/inline_error",
-            locals: { message: "Allowed formats: .txt, .vtt, .srt" }
+            locals: { message: msg }
           )
         end
-        format.html { redirect_to project_meeting_path(@project, @meeting), alert: "Invalid file type." }
+        format.html { redirect_to project_meeting_path(@project, @meeting), alert: msg }
       end
     end
 
@@ -39,11 +38,19 @@ class TranscriptsController < ApplicationController
 
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(
-          "transcript-upload-zone",
-          partial: "meetings/transcript_upload",
-          locals: { project: @project, meeting: @meeting }
-        )
+        @meeting.reload
+        render turbo_stream: [
+          turbo_stream.replace(
+            "transcript-upload-zone",
+            partial: "meetings/transcript_upload",
+            locals: { project: @project, meeting: @meeting }
+          ),
+          turbo_stream.replace(
+            "transcript-summary",
+            partial: "meetings/transcript_summary",
+            locals: { project: @project, meeting: @meeting, transcript: @meeting.transcript }
+          )
+        ]
       end
       format.html { redirect_to project_meeting_path(@project, @meeting), notice: "Transcript uploaded." }
     end
@@ -63,7 +70,4 @@ class TranscriptsController < ApplicationController
       @meeting = @project.meetings.find(params[:meeting_id])
     end
 
-    def allowed_extension?(name)
-      %w[txt vtt srt].include?(File.extname(name).delete(".").downcase)
-    end
 end

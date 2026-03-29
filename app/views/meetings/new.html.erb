@@ -4,7 +4,7 @@
 <% end %>
 
 <h1 class="mb-2 text-2xl font-semibold">Upload meeting</h1>
-<p class="mb-6 text-sm text-[var(--mi-text-secondary)]">Transcript formats: .txt, .vtt, .srt</p>
+<p class="mb-6 text-sm text-[var(--mi-text-secondary)]">Allowed types: plain text (.txt), WebVTT (.vtt), SubRip (.srt).</p>
 
 <%= form_with model: [ @project, @meeting ], html: { multipart: true, class: "max-w-2xl space-y-6" } do |f| %>
   <% if @meeting.errors.any? %>

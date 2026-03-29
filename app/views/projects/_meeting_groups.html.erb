@@ -1,0 +1,42 @@
+<%# locals: project, grouped, group, group_sort %>
+<div id="project-meetings-groups" class="space-y-8">
+  <% if grouped.empty? %>
+    <%= render "shared/empty_state",
+        title: "No meetings in this project",
+        body: "Upload transcripts to generate insights, action items, and sentiment.",
+        cta_path: project_path(project, upload: 1),
+        cta_label: "Upload meeting" %>
+  <% else %>
+    <% grouped.each do |g| %>
+      <section class="min-w-0">
+        <h2 class="mb-3 text-sm font-mono-mi uppercase text-[var(--mi-text-secondary)]"><%= g[:label] %></h2>
+        <div class="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <% g[:meetings].each do |m| %>
+            <article
+              class="w-64 shrink-0 snap-start cursor-pointer rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 transition-colors hover:border-[var(--mi-teal)]/50"
+              role="button"
+              tabindex="0"
+              data-action="click->meeting-detail#open keydown.enter->meeting-detail#open keydown.space->meeting-detail#open"
+              data-meeting-detail-peek-url-value="<%= peek_project_meeting_path(project, m) %>"
+            >
+              <p class="font-medium line-clamp-2"><%= m.title %></p>
+              <p class="mt-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]">
+                <%= m.meeting_date&.to_fs(:long) || m.transcript&.detected_meeting_date&.to_fs(:long) || "No date" %>
+                · <%= m.status %>
+              </p>
+              <p class="mt-1 text-xs text-[var(--mi-text-secondary)]">
+                <% if m.word_count.to_i.positive? %>
+                  <%= number_with_delimiter(m.word_count) %> words
+                <% end %>
+                <% if m.speaker_count.to_i.positive? %>
+                  <% if m.word_count.to_i.positive? %> · <% end %>
+                  <%= m.speaker_count %> speakers
+                <% end %>
+              </p>
+            </article>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  <% end %>
+</div>

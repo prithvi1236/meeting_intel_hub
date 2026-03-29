@@ -44,6 +44,25 @@ class TranscriptParserService
       end.uniq
     end
 
+    # First "Meeting date:" or "Date:" metadata header value that parses as a date.
+    def detect_meeting_date_from_raw(raw)
+      return nil if raw.blank?
+
+      raw.each_line do |line|
+        line = line.strip
+        next if line.blank?
+        next unless metadata_header_line?(line)
+
+        label, rest = line.split(":", 2)
+        lab = label.strip.downcase
+        next unless lab == "meeting date" || lab == "date"
+
+        d = parse_date_header_value(rest.to_s.strip)
+        return d if d
+      end
+      nil
+    end
+
     def parse(file_content, format)
       fmt = format.to_s.downcase.delete(".")
       case fmt
@@ -168,6 +187,19 @@ class TranscriptParserService
     end
 
     private
+      def parse_date_header_value(value)
+        return nil if value.blank?
+
+        if (m = value.match(/(\d{4}-\d{2}-\d{2})/))
+          d = Date.iso8601(m[1])
+          return d
+        end
+
+        Date.parse(value)
+      rescue ArgumentError, TypeError
+        nil
+      end
+
       def metadata_speaker_label?(name)
         name.present? && METADATA_SPEAKER_LABELS.include?(name.to_s.strip.downcase)
       end

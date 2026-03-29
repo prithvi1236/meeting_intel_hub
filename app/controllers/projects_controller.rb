@@ -6,11 +6,11 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @per_page = 10
-    @page = params.fetch(:page, 1).to_i.clamp(1, 1_000_000)
-    scope = @project.meetings.by_date
-    @meeting_total = scope.count
-    @meetings = scope.offset((@page - 1) * @per_page).limit(@per_page)
+    @group = params[:group].presence_in(%w[title day week month]) || "title"
+    @group_sort = params[:group_sort].presence_in(%w[latest name]) || "latest"
+    meetings = @project.meetings.includes(:transcript).to_a
+    @grouped = ProjectMeetingsGrouper.call(meetings, group: @group, group_sort: @group_sort)
+    @open_upload_modal = params[:upload].present?
   end
 
   def new

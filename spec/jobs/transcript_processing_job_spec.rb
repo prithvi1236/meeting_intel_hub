@@ -28,6 +28,7 @@ RSpec.describe TranscriptProcessingJob do
     meeting.reload
 
     expect(transcript.parsed_segments).not_to be_empty
+    expect(transcript.detected_meeting_date).to eq(Date.new(2026, 5, 12))
     expect(transcript.total_speakers).to be >= 3
     expect(meeting.speaker_count).to eq(transcript.total_speakers)
     expect(meeting.word_count).to be > 50

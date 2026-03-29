@@ -9,6 +9,22 @@ RSpec.describe TranscriptParserService do
     Rails.root.join("test_transcripts", name).read
   end
 
+  describe ".detect_meeting_date_from_raw" do
+    it "returns date from Meeting date header" do
+      raw = "Meeting Date: 2026-05-12\n\nAnn: Hi"
+      expect(described_class.detect_meeting_date_from_raw(raw)).to eq(Date.new(2026, 5, 12))
+    end
+
+    it "returns date from Date header with natural language" do
+      raw = "Date: 15 March 2026\n\nAnn: Hi"
+      expect(described_class.detect_meeting_date_from_raw(raw)).to eq(Date.new(2026, 3, 15))
+    end
+
+    it "returns nil when no date header" do
+      expect(described_class.detect_meeting_date_from_raw("Ann: Hello")).to be_nil
+    end
+  end
+
   describe ".parse" do
     it "parses TXT with bracket and colon speaker patterns" do
       raw = fixture("sample.txt")

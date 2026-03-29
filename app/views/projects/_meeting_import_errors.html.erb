@@ -1,0 +1,7 @@
+<div id="meeting-import-errors" class="min-h-0">
+  <% if local_assigns[:message].present? %>
+    <div class="rounded-[8px] border border-[var(--mi-red)]/40 bg-[var(--mi-red)]/10 px-3 py-2 text-sm text-[var(--mi-red)]" role="alert">
+      <%= message %>
+    </div>
+  <% end %>
+</div>

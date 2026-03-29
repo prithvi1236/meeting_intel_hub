@@ -3,52 +3,99 @@
   <%= link_to "Projects", projects_path, class: "hover:underline" %> / <%= @project.name %>
 <% end %>
 
-<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <div>
-    <h1 class="text-2xl font-semibold"><%= @project.name %></h1>
-    <p class="text-sm text-[var(--mi-text-secondary)]"><%= @project.description %></p>
+<div
+  class="space-y-6"
+  data-controller="meeting-detail meeting-upload-modal"
+  data-meeting-upload-modal-preview-url-value="<%= project_transcript_previews_path(@project) %>"
+  data-meeting-upload-modal-import-url-value="<%= project_meeting_imports_path(@project) %>"
+  data-meeting-upload-modal-group-value="<%= @group %>"
+  data-meeting-upload-modal-group-sort-value="<%= @group_sort %>"
+  data-meeting-upload-modal-open-value="<%= @open_upload_modal %>"
+>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold"><%= @project.name %></h1>
+      <p class="text-sm text-[var(--mi-text-secondary)]"><%= @project.description %></p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "Edit", edit_project_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
+      <%= link_to "Cross-meeting chat", project_chat_sessions_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
+      <button
+        type="button"
+        class="rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]"
+        data-action="click->meeting-upload-modal#openModal"
+      >
+        Upload meeting
+      </button>
+      <%= button_to "Delete project",
+            project_path(@project),
+            method: :delete,
+            class: "rounded-[8px] border border-[var(--mi-red)] px-3 py-2 text-sm text-[var(--mi-red)]",
+            form: { data: { turbo_confirm: "Delete this project and all its meetings?" } } %>
+    </div>
   </div>
-  <div class="flex flex-wrap gap-2">
-    <%= link_to "Edit", edit_project_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
-    <%= link_to "Cross-meeting chat", project_chat_sessions_path(@project), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-2 text-sm" %>
-    <%= link_to "Upload meeting", new_project_meeting_path(@project), class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
-    <%= button_to "Delete project",
-          project_path(@project),
-          method: :delete,
-          class: "rounded-[8px] border border-[var(--mi-red)] px-3 py-2 text-sm text-[var(--mi-red)]",
-          form: { data: { turbo_confirm: "Delete this project and all its meetings?" } } %>
-  </div>
-</div>
 
-<% if @meetings.empty? %>
-  <%= render "shared/empty_state",
-      title: "No meetings in this project",
-      body: "Upload a transcript to generate insights, action items, and sentiment.",
-      cta_path: new_project_meeting_path(@project),
-      cta_label: "Upload meeting" %>
-<% else %>
-  <ul class="space-y-2">
-    <% @meetings.each do |m| %>
-      <li class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 flex justify-between gap-4">
-        <div>
-          <%= link_to m.title, [ @project, m ], class: "font-medium hover:underline" %>
-          <p class="text-xs text-[var(--mi-text-secondary)] font-mono-mi">
-            <%= m.meeting_date&.to_fs(:long) || "No date" %> · <%= m.status %>
-          </p>
-        </div>
-        <%= link_to "Open", [ @project, m ], class: "text-sm text-[var(--mi-teal)] self-center" %>
-      </li>
-    <% end %>
-  </ul>
-  <% total_pages = (@meeting_total.to_f / @per_page).ceil %>
-  <% if total_pages > 1 %>
-    <div class="mt-6 flex gap-4 text-sm font-mono-mi">
-      <% if @page > 1 %>
-        <%= link_to "Previous", project_path(@project, page: @page - 1), class: "text-[var(--mi-teal)]" %>
-      <% end %>
-      <% if @page < total_pages %>
-        <%= link_to "Next", project_path(@project, page: @page + 1), class: "text-[var(--mi-teal)]" %>
-      <% end %>
+  <%= form_with url: project_path(@project), method: :get, class: "flex flex-wrap items-end gap-3" do %>
+    <div>
+      <label class="block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Group by</label>
+      <%= select_tag :group,
+            options_for_select(
+              [
+                [ "Meeting name", "title" ],
+                [ "Day", "day" ],
+                [ "Week", "week" ],
+                [ "Month", "month" ]
+              ],
+              @group
+            ),
+            class: "mt-1 rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-3 py-2 text-sm",
+            onchange: "this.form.requestSubmit()" %>
+    </div>
+    <div>
+      <label class="block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Sort groups</label>
+      <%= select_tag :group_sort,
+            options_for_select(
+              [
+                [ "Latest meeting first", "latest" ],
+                [ "Name / period (A–Z)", "name" ]
+              ],
+              @group_sort
+            ),
+            class: "mt-1 rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-3 py-2 text-sm",
+            onchange: "this.form.requestSubmit()" %>
     </div>
   <% end %>
-<% end %>
+
+  <%= render "projects/meeting_groups",
+      project: @project,
+      grouped: @grouped,
+      group: @group,
+      group_sort: @group_sort %>
+
+  <dialog
+    data-meeting-detail-target="dialog"
+    class="fixed left-1/2 top-1/2 z-50 w-[min(100vw-2rem,960px)] max-h-[min(100vh-2rem,90vh)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-0 shadow-xl backdrop:bg-black/60"
+    aria-label="Meeting details"
+  >
+    <div class="flex max-h-[min(100vh-2rem,90vh)] flex-col">
+      <div class="flex justify-end border-b border-[var(--mi-border)] px-3 py-2">
+        <button
+          type="button"
+          class="rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-sm"
+          data-action="click->meeting-detail#close"
+        >
+          Close
+        </button>
+      </div>
+      <div class="min-h-0 flex-1 overflow-y-auto p-4">
+        <turbo-frame
+          id="meeting-detail"
+          data-meeting-detail-target="frame"
+          class="block min-h-[200px]"
+        ></turbo-frame>
+      </div>
+    </div>
+  </dialog>
+
+  <%= render "projects/upload_meeting_modal" %>
+</div>

@@ -1,0 +1,49 @@
+<div class="flex flex-col gap-4">
+  <div>
+    <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Overall sentiment</p>
+    <% score = meeting.overall_sentiment_score %>
+    <p class="text-4xl font-semibold <%= sentiment_color(score) %>">
+      <%= score ? number_with_precision(score, precision: 2) : "—" %>
+    </p>
+  </div>
+
+  <% timeline = (meeting.sentiment_data || {})["timeline"] || [] %>
+  <%= tag.div(
+        data: {
+          controller: "sentiment-timeline",
+          sentiment_timeline_segments_value: timeline
+        }
+      ) do %>
+    <p class="mb-2 text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Timeline</p>
+    <canvas
+      data-sentiment-timeline-target="canvas"
+      data-action="click->sentiment-timeline#click"
+      class="h-10 w-full cursor-pointer rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)]"
+      aria-label="Sentiment timeline"
+    ></canvas>
+  <% end %>
+
+  <% speakers = (meeting.sentiment_data || {})["per_speaker"] || [] %>
+  <div>
+    <p class="mb-2 text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">Speakers</p>
+    <ul class="space-y-3">
+      <% speakers.each do |s| %>
+        <li class="flex items-center gap-3 rounded-[8px] border border-[var(--mi-border)] px-3 py-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--mi-border)] text-xs font-mono-mi">
+            <%= s["name"].to_s.first(2).upcase %>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium"><%= s["name"] %></p>
+            <p class="text-xs text-[var(--mi-text-secondary)]"><%= s["dominant_emotion"] %></p>
+          </div>
+          <span class="text-sm font-mono-mi <%= sentiment_color(s['average_score']) %>">
+            <%= number_with_precision(s["average_score"].to_f, precision: 2) %>
+          </span>
+        </li>
+      <% end %>
+    </ul>
+    <% if speakers.empty? && !meeting.processing? %>
+      <p class="text-sm text-[var(--mi-text-secondary)]">No speaker sentiment yet.</p>
+    <% end %>
+  </div>
+</div>

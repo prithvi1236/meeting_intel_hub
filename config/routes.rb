@@ -9,6 +9,8 @@ Rails.application.routes.draw do
   get "dashboard/project_stats/:id", to: "dashboard#project_stats", as: :dashboard_project_stats
 
   resources :projects do
+    resources :transcript_previews, only: %i[create]
+    resources :meeting_imports, only: %i[create]
     resources :meetings do
       resources :transcripts, only: %i[create destroy]
       resources :extracted_items, only: %i[index update destroy]
@@ -17,6 +19,7 @@ Rails.application.routes.draw do
       end
       member do
         get :sentiment
+        get :peek
         post :reprocess
       end
     end

@@ -1,9 +1,35 @@
 <%= turbo_frame_tag "transcript-upload-zone" do %>
   <div id="transcript-upload-errors"></div>
-  <%= form_with url: project_meeting_transcripts_path(project, meeting), multipart: true, data: { turbo_frame: "transcript-upload-zone" } do %>
-    <label class="block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Replace transcript</label>
-    <%= file_field_tag :transcript_file, accept: ".txt,.vtt,.srt", class: "block w-full text-sm" %>
-    <%= submit_tag "Upload", class: "mt-2 rounded-[8px] bg-[var(--mi-teal)] px-3 py-1.5 text-xs font-medium text-[#0f0f0f] cursor-pointer" %>
+  <%= form_with url: project_meeting_transcripts_path(project, meeting), multipart: true, data: { turbo_frame: "transcript-upload-zone" }, class: "space-y-4" do %>
+    <label class="block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">
+      <%= meeting.transcript.present? ? "Replace transcript" : "Upload transcript" %>
+    </label>
+    <p class="text-xs text-[var(--mi-text-secondary)] -mt-2">
+      Allowed types: plain text (.txt), WebVTT (.vtt), SubRip (.srt).
+    </p>
+    <div
+      data-controller="drag-drop"
+      data-drag-drop-highlight-class="border-teal-500 bg-teal-500/10"
+    >
+      <div
+        data-drag-drop-target="zone"
+        data-action="dragover->drag-drop#highlight dragleave->drag-drop#unhighlight drop->drag-drop#handleDrop click->drag-drop#openFilePicker"
+        class="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--mi-border)] bg-[var(--mi-bg)]/40 px-4 py-6 text-center transition-colors"
+        role="button"
+        tabindex="0"
+        aria-label="Drop transcript file here or click to browse"
+      >
+        <p class="text-sm text-[var(--mi-text-secondary)]">Drag & drop transcript here, or click to browse</p>
+        <%= file_field_tag :transcript_file,
+              accept: ".txt,.vtt,.srt",
+              direct_upload: false,
+              class: "hidden",
+              data: { drag_drop_target: "input", action: "change->drag-drop#handleSelect" } %>
+      </div>
+      <div data-drag-drop-target="error" class="mt-2 hidden text-sm text-[var(--mi-red)]" role="alert"></div>
+      <div data-drag-drop-target="preview" class="mt-3 space-y-2"></div>
+    </div>
+    <%= submit_tag "Upload and process", class: "rounded-[8px] bg-[var(--mi-teal)] px-3 py-1.5 text-xs font-medium text-[#0f0f0f] cursor-pointer" %>
   <% end %>
   <% if meeting.transcript.present? %>
     <%= button_to "Delete transcript",

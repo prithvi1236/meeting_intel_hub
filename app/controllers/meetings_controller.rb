@@ -1,6 +1,6 @@
 class MeetingsController < ApplicationController
   before_action :set_project
-  before_action :set_meeting, only: %i[show edit update destroy sentiment reprocess]
+  before_action :set_meeting, only: %i[show edit update destroy sentiment reprocess peek]
 
   def index
     redirect_to @project
@@ -9,14 +9,16 @@ class MeetingsController < ApplicationController
   def show
     @transcript = @meeting.transcript
     @extracted_items = @meeting.extracted_items.order(:position, :created_at)
-    @chat_session = ChatSession.find_or_create_by!(project: @project, meeting: @meeting) do |s|
-      s.title = "Meeting chat"
-    end
-    @messages = @chat_session.chat_messages.order(:created_at)
+  end
+
+  def peek
+    @transcript = @meeting.transcript
+    @extracted_items = @meeting.extracted_items.order(:position, :created_at)
+    render layout: false
   end
 
   def new
-    @meeting = @project.meetings.build
+    redirect_to project_path(@project, upload: "1"), status: :see_other
   end
 
   def edit
@@ -26,9 +28,13 @@ class MeetingsController < ApplicationController
     @meeting = @project.meetings.build(meeting_params)
     uploaded = params[:transcript_file]
 
-    if uploaded.present? && !allowed_extension?(uploaded.original_filename)
-      @meeting.errors.add(:base, "Allowed formats: .txt, .vtt, .srt")
-      return render :new, status: :unprocessable_entity
+    if uploaded.present?
+      TranscriptUploadValidator.validate(uploaded).each do |msg|
+        @meeting.errors.add(:base, msg)
+      end
+      if @meeting.errors.any?
+        return render :new, status: :unprocessable_entity
+      end
     end
 
     transcript_id = nil
@@ -97,9 +103,5 @@ class MeetingsController < ApplicationController
 
     def meeting_params
       params.expect(meeting: [ :title, :meeting_date ])
-    end
-
-    def allowed_extension?(name)
-      %w[txt vtt srt].include?(File.extname(name).delete(".").downcase)
     end
 end

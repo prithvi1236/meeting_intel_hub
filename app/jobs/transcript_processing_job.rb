@@ -12,13 +12,16 @@ class TranscriptProcessingJob < ApplicationJob
     file_content = read_attachment(transcript)
     format = transcript.file_format.presence || detect_format(transcript.file_name)
 
+    detected_meeting_date = TranscriptParserService.detect_meeting_date_from_raw(file_content)
+
     segments = TranscriptParserService.parse(file_content, format)
     raw = segments.map { |s| "#{s['speaker']}: #{s['text']}" }.join("\n")
 
     transcript.update!(
       parsed_segments: segments,
       raw_content: raw,
-      total_speakers: segments.map { |s| s["speaker"] }.uniq.size
+      total_speakers: segments.map { |s| s["speaker"] }.uniq.size,
+      detected_meeting_date: detected_meeting_date
     )
 
     meeting.update!(

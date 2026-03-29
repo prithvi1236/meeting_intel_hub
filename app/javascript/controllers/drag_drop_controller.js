@@ -38,7 +38,9 @@ export default class extends Controller {
     files.forEach((file) => {
       const ext = file.name.split(".").pop()?.toLowerCase()
       if (!allowed.has(ext)) {
-        this.showError(`Unsupported type: ${file.name}`)
+        this.showError(
+          `Unsupported file type (${file.name}). Allowed types: plain text (.txt), WebVTT (.vtt), SubRip (.srt).`
+        )
         return
       }
       this.previewTarget.appendChild(this.renderPreview(file, ext))
