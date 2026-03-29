@@ -1,0 +1,15 @@
+Meeting Date: 2026-05-12
+Project: Project Zephyr Roadmap
+Participants: Sarah (Product), Marcus (Engineering), Elena (Design)
+
+Sarah: Alright team, let's look at the Q3 roadmap. The big elephant in the room is the new AI Copilot feature. Sales is screaming for it, but I need to know if it's actually feasible.
+Marcus: Honestly, Sarah, I'm getting really frustrated with these arbitrary sales deadlines. We still have a mountain of technical debt from the database migration. If we try to shove the Copilot feature into Q3, the core app performance is going to suffer. It's too risky.
+Elena: I agree with Marcus on the risk, but the user testing we did last week was phenomenal. Users absolutely loved the Copilot concept. It could double our engagement metrics.
+Sarah: Okay, I hear you both. Marcus, what if we delay the Mobile Dashboard update? We can push that entirely to Q4. Would that free up enough backend resources to build a safe MVP of the Copilot?
+Marcus: If we drop the Mobile Dashboard... yeah. Actually, yes. That changes things. That gives my team at least three extra weeks. I feel much better about that approach.
+Sarah: Great. Let's make that the official decision: We are delaying the Mobile Dashboard to Q4 to prioritize the AI Copilot MVP in Q3. 
+Marcus: I can get behind that. 
+Sarah: Perfect. So for next steps: Marcus, I need you to scope out the backend architecture for the Copilot and have that document ready by this Friday. Elena, can you please share the finalized UI mockups for the chat interface by Wednesday?
+Elena: You got it. I'll drop them in the Slack channel by Wednesday end of day.
+Marcus: And I'll have the architecture doc ready by Friday morning. 
+Sarah: Awesome. Thanks everyone.

@@ -1,0 +1,12 @@
+Meeting Date: 2026-05-16
+Project: Project Zephyr Roadmap
+Participants: Sarah (Product), Marcus (Engineering)
+
+Sarah: Hey Marcus, just doing a quick sync. Did you manage to finish that task from Tuesday?
+Marcus: Yeah, the Copilot backend architecture doc is done. I sent you the link this morning. 
+Sarah: Awesome, thank you. So, looking at your architecture, we need to make a call on the LLM provider. Are we going with an open-source local model or an external API like OpenAI?
+Marcus: If we want to hit that Q3 deadline we agreed on, we have to go with OpenAI. Running a local model requires us to spin up dedicated GPU clusters, and the latency is still too high for a chat interface. OpenAI is plug-and-play.
+Sarah: Makes sense. Let's decide to use OpenAI for the Q3 MVP. We can always re-evaluate local models next year if costs get too high.
+Marcus: Sounds good to me.
+Sarah: Alright, since we are using OpenAI, I need to get the lawyers involved. I will draft the legal terms for the data privacy usage and send them to Legal by next Monday. 
+Marcus: Perfect. Let me know when they approve it so I can grab the API keys.

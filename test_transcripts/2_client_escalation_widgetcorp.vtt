@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.500
+<v Alex> This is an absolute disaster. WidgetCorp just called me screaming.
+
+00:00:05.000 --> 00:00:09.200
+<v Alex> Their entire checkout flow has been down for two hours because of our API outage. 
+
+00:00:09.500 --> 00:00:14.000
+<v Priya> Look, Alex, I understand they are upset, but yelling at me doesn't fix the server. 
+
+00:00:14.200 --> 00:00:20.100
+<v Priya> We pushed the v2.4 patch last night, and it introduced an aggressive rate-limiting bug that we didn't catch in staging.
+
+00:00:20.500 --> 00:00:24.000
+<v David> Okay, let's take a breath. Blame doesn't matter right now. Fixes matter. Priya, what is the fastest resolution?
+
+00:00:24.500 --> 00:00:30.000
+<v Priya> The fastest thing is to completely roll back to v2.3. It will take the system offline for about five minutes, but it will stabilize the API.
+
+00:00:30.500 --> 00:00:33.000
+<v David> Do it. We are making the decision right now to roll back to v2.3. 
+
+00:00:33.200 --> 00:00:38.500
+<v Priya> Understood. Actioning the rollback now. It will be fully completed by 2:00 PM today.
+
+00:00:39.000 --> 00:00:44.000
+<v David> Alex, I need you to draft the formal incident report and send it to the WidgetCorp CTO by EOD today. 
+
+00:00:44.500 --> 00:00:50.000
+<v Alex> Will do. I'll also offer them a 15% discount on next month's invoice to smooth this over.
+
+00:00:50.500 --> 00:00:55.000
+<v David> Good call. I'll approve that. I will process the credit memo for WidgetCorp by tomorrow morning.
