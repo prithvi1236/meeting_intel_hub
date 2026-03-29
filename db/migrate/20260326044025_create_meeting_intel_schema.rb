@@ -14,7 +14,6 @@ class CreateMeetingIntelSchema < ActiveRecord::Migration[8.0]
       t.timestamps
     end
     add_index :projects, :slug, unique: true
-    add_index :projects, :user_id
 
     create_table :meetings, id: :uuid do |t|
       t.references :project, null: false, foreign_key: true, type: :uuid
@@ -34,7 +33,7 @@ class CreateMeetingIntelSchema < ActiveRecord::Migration[8.0]
     add_index :meetings, :status
 
     create_table :transcripts, id: :uuid do |t|
-      t.references :meeting, null: false, foreign_key: true, type: :uuid
+      t.references :meeting, null: false, foreign_key: true, type: :uuid, index: false
       t.string :file_name
       t.string :file_format
       t.text :raw_content
@@ -89,7 +88,7 @@ class CreateMeetingIntelSchema < ActiveRecord::Migration[8.0]
     add_index :chat_sessions, [ :project_id, :meeting_id ]
 
     create_table :chat_messages, id: :uuid do |t|
-      t.references :chat_session, null: false, foreign_key: true, type: :uuid
+      t.references :chat_session, null: false, foreign_key: true, type: :uuid, index: false
       t.string :role, null: false
       t.text :content
       t.jsonb :citations, default: []
