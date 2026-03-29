@@ -1,5 +1,49 @@
 class TranscriptParserService
+  # Labels before "Label: value" that are meeting metadata, not dialogue speakers.
+  # (Use string literals for multi-word labels — %w splits on whitespace.)
+  METADATA_SPEAKER_LABELS = [
+    "meeting date",
+    "date",
+    "project",
+    "participants",
+    "attendees",
+    "attendee list",
+    "title",
+    "agenda",
+    "topic",
+    "duration",
+    "location",
+    "recording",
+    "meeting id",
+    "transcript",
+    "organizer",
+    "notes"
+  ].freeze
+
+  # Matches a single-line colon turn: "Name: dialogue…" (same rule as parse_txt).
+  TXT_COLON_SPEAKER_LINE = /\A([^:\[\]\(]{2,40}):\s*(.+)\z/
+
   class << self
+    # Labels from lines the parser treats as meeting metadata (`Key: value`).
+    def txt_metadata_field_labels(raw)
+      raw.each_line.map(&:strip).reject(&:blank?).filter_map do |line|
+        next unless metadata_header_line?(line)
+
+        line.split(":", 2).first.strip
+      end
+    end
+
+    # Distinct speaker names from colon-style turns only (ignores metadata lines).
+    # Use for fixtures where dialogue is entirely `Name: …` lines after headers.
+    def txt_colon_turn_speaker_names(raw)
+      raw.split(/\r?\n/).map(&:strip).reject(&:blank?).filter_map do |line|
+        next if metadata_header_line?(line)
+
+        m = line.match(TXT_COLON_SPEAKER_LINE)
+        m[1].strip if m
+      end.uniq
+    end
+
     def parse(file_content, format)
       fmt = format.to_s.downcase.delete(".")
       case fmt
@@ -20,12 +64,18 @@ class TranscriptParserService
       body.scan(/(\d{2}:\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3})\s*\n([\s\S]*?)(?=\n\n|\z)/m) do |start_ts, end_ts, text_block|
         text = text_block.strip.gsub(%r{</?v[^>]*>}, " ").gsub(/\s+/, " ").strip
         speaker = text_block[%r{<v\s+([^>]+)>}i, 1]&.strip
-        speaker ||= text.split(":").first.strip if text.include?(":")
+        if speaker.blank? && text.include?(":")
+          potential = text.split(":").first.strip
+          next if metadata_speaker_label?(potential)
+
+          speaker = potential
+        end
         line_text = if speaker.present? && text.start_with?("#{speaker}:")
           text.sub(/\A#{Regexp.escape(speaker)}:\s*/, "")
         else
           text
         end
+
         segments << {
           "speaker" => speaker.presence || "Speaker",
           "text" => line_text.presence || text,
@@ -41,6 +91,8 @@ class TranscriptParserService
       content.scan(/(\d+)\s*\n(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})\s*\n([\s\S]*?)(?=\n\n|\z)/m) do |_n, start_ts, end_ts, text_block|
         raw = text_block.strip.gsub(/\s+/, " ")
         speaker, line_text = split_speaker_line(raw)
+        next if metadata_speaker_label?(speaker)
+
         segments << {
           "speaker" => speaker,
           "text" => line_text,
@@ -77,6 +129,7 @@ class TranscriptParserService
       lines.each_with_index do |line, idx|
         line = line.strip
         next if line.blank?
+        next if metadata_header_line?(line)
 
         if (m = line.match(/\A(\d{1,2}:\d{2}(?::\d{2})?)\s*[-=]+>\s*(\d{1,2}:\d{2}(?::\d{2})?)\z/))
           flush.call
@@ -100,7 +153,7 @@ class TranscriptParserService
           current_speaker = line
           current_start = idx * 5 if current_start.to_i.zero?
           current_end = [ current_end.to_i, current_start.to_i + 10 ].max
-        elsif (m = line.match(/\A([^:\[\]\(]{2,40}):\s*(.+)\z/))
+        elsif (m = line.match(TXT_COLON_SPEAKER_LINE))
           flush.call(idx * 5)
           current_speaker = m[1].strip
           buf << m[2]
@@ -115,6 +168,17 @@ class TranscriptParserService
     end
 
     private
+      def metadata_speaker_label?(name)
+        name.present? && METADATA_SPEAKER_LABELS.include?(name.to_s.strip.downcase)
+      end
+
+      def metadata_header_line?(line)
+        return false unless line.include?(":")
+
+        label, rest = line.split(":", 2)
+        rest.present? && metadata_speaker_label?(label)
+      end
+
       def timestamp_to_seconds(ts)
         ts = ts.to_s.strip
         parts = ts.split(":")

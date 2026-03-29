@@ -32,10 +32,15 @@ RSpec.describe TranscriptParserService do
       expect(segs.first["text"]).to be_present
     end
 
-    it "parses product roadmap TXT (test_transcripts) with Sarah, Marcus, Elena" do
-      segs = described_class.parse(test_transcript("1_product_roadmap_q3.txt"), "txt")
+    it "parses TXT meeting headers as metadata, not speakers (colon-turn fixtures)" do
+      raw = test_transcript("1_product_roadmap_q3.txt")
+      segs = described_class.parse(raw, "txt")
       speakers = segs.map { |s| s["speaker"] }.uniq
-      expect(speakers).to include("Sarah", "Marcus", "Elena")
+      metadata_labels = described_class.txt_metadata_field_labels(raw)
+      expected_colon_speakers = described_class.txt_colon_turn_speaker_names(raw)
+
+      expect(metadata_labels & speakers).to be_empty
+      expect(speakers.sort).to eq(expected_colon_speakers.sort)
       expect(segs.map { |s| s["text"] }.join(" ")).to include("AI Copilot", "Mobile Dashboard")
     end
 
@@ -48,10 +53,15 @@ RSpec.describe TranscriptParserService do
       expect(segs.first["text"]).to include("WidgetCorp")
     end
 
-    it "parses engineering sync TXT" do
-      segs = described_class.parse(test_transcript("3_engineering_sync_copilot.txt"), "txt")
+    it "parses engineering sync TXT without header fields as speakers" do
+      raw = test_transcript("3_engineering_sync_copilot.txt")
+      segs = described_class.parse(raw, "txt")
       speakers = segs.map { |s| s["speaker"] }.uniq
-      expect(speakers).to include("Sarah", "Marcus")
+      metadata_labels = described_class.txt_metadata_field_labels(raw)
+      expected_colon_speakers = described_class.txt_colon_turn_speaker_names(raw)
+
+      expect(metadata_labels & speakers).to be_empty
+      expect(speakers.sort).to eq(expected_colon_speakers.sort)
       expect(segs.map { |s| s["text"] }.join(" ")).to include("OpenAI")
     end
 
