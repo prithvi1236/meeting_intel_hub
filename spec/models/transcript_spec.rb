@@ -13,4 +13,14 @@ RSpec.describe Transcript, type: :model do
     transcript = create(:transcript)
     expect(transcript.meeting).to be_present
   end
+
+  it "normalizes parsed_segments to string keys for downstream jobs" do
+    transcript = build(
+      :transcript,
+      parsed_segments: [ { speaker: "Alex", text: "Hi", start_time: 0, end_time: 1 } ]
+    )
+    row = transcript.parsed_segments_normalized.first
+    expect(row["speaker"]).to eq("Alex")
+    expect(row["text"]).to eq("Hi")
+  end
 end

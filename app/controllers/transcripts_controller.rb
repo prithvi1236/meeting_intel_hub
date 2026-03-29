@@ -6,17 +6,8 @@ class TranscriptsController < ApplicationController
     uploaded = params[:transcript_file]
     errors = TranscriptUploadValidator.validate(uploaded)
     if errors.any?
-      msg = errors.first
-      return respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "transcript-upload-errors",
-            partial: "shared/inline_error",
-            locals: { message: msg }
-          )
-        end
-        format.html { redirect_to project_meeting_path(@project, @meeting), alert: msg }
-      end
+      redirect_to project_path(@project), alert: errors.first
+      return
     end
 
     fmt = File.extname(uploaded.original_filename).delete(".").downcase
@@ -36,29 +27,7 @@ class TranscriptsController < ApplicationController
     end
     TranscriptProcessingJob.perform_later(transcript_id)
 
-    respond_to do |format|
-      format.turbo_stream do
-        @meeting.reload
-        render turbo_stream: [
-          turbo_stream.replace(
-            "transcript-upload-zone",
-            partial: "meetings/transcript_upload",
-            locals: { project: @project, meeting: @meeting }
-          ),
-          turbo_stream.replace(
-            "transcript-summary",
-            partial: "meetings/transcript_summary",
-            locals: { project: @project, meeting: @meeting, transcript: @meeting.transcript }
-          )
-        ]
-      end
-      format.html { redirect_to project_meeting_path(@project, @meeting), notice: "Transcript uploaded." }
-    end
-  end
-
-  def destroy
-    @meeting.transcript&.destroy
-    redirect_to project_meeting_path(@project, @meeting), notice: "Transcript removed."
+    redirect_to project_path(@project), notice: "Transcript uploaded."
   end
 
   private
@@ -69,5 +38,4 @@ class TranscriptsController < ApplicationController
     def set_meeting
       @meeting = @project.meetings.find(params[:meeting_id])
     end
-
 end

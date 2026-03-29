@@ -7,13 +7,12 @@ class MeetingsController < ApplicationController
   end
 
   def show
-    @transcript = @meeting.transcript
-    @extracted_items = @meeting.extracted_items.order(:position, :created_at)
+    redirect_to project_path(@project)
   end
 
   def peek
-    @transcript = @meeting.transcript
-    @extracted_items = @meeting.extracted_items.order(:position, :created_at)
+    return head :forbidden if @meeting.processing?
+
     render layout: false
   end
 
@@ -53,14 +52,18 @@ class MeetingsController < ApplicationController
       end
     end
     TranscriptProcessingJob.perform_later(transcript_id) if transcript_id
-    redirect_to project_meeting_path(@project, @meeting), notice: "Meeting created."
+    redirect_to project_path(@project), notice: "Meeting created."
   rescue ActiveRecord::RecordInvalid
     render :new, status: :unprocessable_entity
   end
 
   def update
     if @meeting.update(meeting_params)
-      redirect_to [ @project, @meeting ], notice: "Meeting updated."
+      if turbo_frame_request?
+        redirect_to peek_project_meeting_path(@project, @meeting), status: :see_other
+      else
+        redirect_to project_path(@project), notice: "Meeting updated."
+      end
     else
       render :edit, status: :unprocessable_entity
     end
@@ -86,9 +89,9 @@ class MeetingsController < ApplicationController
       Rails.cache.delete(MeetingPipeline.cache_key(@meeting.id, :extract))
       Rails.cache.delete(MeetingPipeline.cache_key(@meeting.id, :sentiment))
       TranscriptProcessingJob.perform_later(tr.id)
-      redirect_to [ @project, @meeting ], notice: "Reprocessing started."
+      redirect_to project_path(@project), notice: "Reprocessing started."
     else
-      redirect_to [ @project, @meeting ], alert: "No transcript to reprocess."
+      redirect_to project_path(@project), alert: "No transcript to reprocess."
     end
   end
 

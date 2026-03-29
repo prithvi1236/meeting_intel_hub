@@ -1,20 +1,27 @@
 <div id="<%= dom_id(item) %>" class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] p-3" data-controller="inline-edit">
   <div data-inline-edit-target="display">
-    <p class="text-sm"><%= item.description %></p>
-    <div class="mt-2 flex flex-wrap gap-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]">
+    <p class="text-sm text-[var(--mi-text)]"><%= item.description %></p>
+    <div class="mt-2 flex flex-wrap gap-2 text-xs font-mono-mi text-[var(--mi-text)]/75">
       <% if item.action_item? && item.owner.present? %>
         <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5"><%= item.owner %></span>
       <% end %>
       <% if item.due_date %>
         <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Due <%= item.due_date.to_fs(:long) %></span>
       <% end %>
-      <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Conf <%= item.confidence_score ? number_with_precision(item.confidence_score, precision: 2) : "—" %></span>
       <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5"><%= item.status %></span>
     </div>
     <% if item.source_quote.present? %>
-      <p class="mt-2 text-xs text-[var(--mi-text-secondary)] italic line-clamp-3">“<%= item.source_quote %>”</p>
+      <p class="mt-2 text-xs italic leading-relaxed text-[var(--mi-text)]/70 line-clamp-3">“<%= item.source_quote %>”</p>
     <% end %>
-    <button type="button" class="mt-2 text-xs text-[var(--mi-teal)]" data-action="click->inline-edit#showForm" aria-label="Edit item">Edit</button>
+    <button
+      type="button"
+      class="mt-2 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--mi-border)] text-[var(--mi-teal)] transition-colors hover:border-[var(--mi-teal)]/50 hover:bg-[var(--mi-teal)]/[0.08] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]"
+      data-action="click->inline-edit#showForm"
+      aria-label="Edit item"
+      title="Edit item"
+    >
+      <%= render "shared/mi_icon", name: :pencil, class: "h-4 w-4" %>
+    </button>
   </div>
   <div data-inline-edit-target="form" class="hidden">
     <%= form_with model: [ project, meeting, item ] do |f| %>

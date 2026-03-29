@@ -1,4 +1,8 @@
 <%# locals: project, grouped, group, group_sort %>
+<% processing_meetings = grouped.flat_map { |g| g[:meetings] }.select(&:processing?).uniq %>
+<% processing_meetings.each do |m| %>
+  <%= turbo_stream_from "meeting_#{m.id}" %>
+<% end %>
 <div id="project-meetings-groups" class="space-y-8">
   <% if grouped.empty? %>
     <%= render "shared/empty_state",
@@ -9,31 +13,14 @@
   <% else %>
     <% grouped.each do |g| %>
       <section class="min-w-0">
-        <h2 class="mb-3 text-sm font-mono-mi uppercase text-[var(--mi-text-secondary)]"><%= g[:label] %></h2>
-        <div class="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+        <h2 class="mb-3 text-xs font-mono-mi font-medium uppercase tracking-[0.12em] text-[var(--mi-text-secondary)]">
+          <%= g[:label] %>
+        </h2>
+        <div
+          class="flex gap-4 overflow-x-auto overscroll-x-contain pb-3 pt-0.5 snap-x snap-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-color:var(--mi-border)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--mi-border)] hover:[&::-webkit-scrollbar-thumb]:bg-[var(--mi-text-secondary)]/40"
+        >
           <% g[:meetings].each do |m| %>
-            <article
-              class="w-64 shrink-0 snap-start cursor-pointer rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 transition-colors hover:border-[var(--mi-teal)]/50"
-              role="button"
-              tabindex="0"
-              data-action="click->meeting-detail#open keydown.enter->meeting-detail#open keydown.space->meeting-detail#open"
-              data-meeting-detail-peek-url-value="<%= peek_project_meeting_path(project, m) %>"
-            >
-              <p class="font-medium line-clamp-2"><%= m.title %></p>
-              <p class="mt-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]">
-                <%= m.meeting_date&.to_fs(:long) || m.transcript&.detected_meeting_date&.to_fs(:long) || "No date" %>
-                · <%= m.status %>
-              </p>
-              <p class="mt-1 text-xs text-[var(--mi-text-secondary)]">
-                <% if m.word_count.to_i.positive? %>
-                  <%= number_with_delimiter(m.word_count) %> words
-                <% end %>
-                <% if m.speaker_count.to_i.positive? %>
-                  <% if m.word_count.to_i.positive? %> · <% end %>
-                  <%= m.speaker_count %> speakers
-                <% end %>
-              </p>
-            </article>
+            <%= render "projects/meeting_card", project: project, meeting: m %>
           <% end %>
         </div>
       </section>

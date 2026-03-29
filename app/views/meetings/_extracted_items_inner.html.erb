@@ -4,7 +4,6 @@
     <div class="flex flex-wrap gap-2">
       <%= link_to "Export CSV", export_items_api_v1_meeting_path(meeting, format: :csv), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi" %>
       <%= link_to "Export PDF", export_items_api_v1_meeting_path(meeting, format: :pdf), class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi" %>
-      <%= button_to "Reprocess", reprocess_project_meeting_path(meeting.project, meeting), method: :post, class: "rounded-[8px] border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi bg-transparent" %>
     </div>
   <% end %>
 
@@ -19,7 +18,7 @@
     <% actions = meeting.extracted_items.action_items.order(:position, :created_at) %>
     <div class="space-y-4">
       <div>
-        <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Decisions</p>
+        <p class="mb-2 text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Decisions</p>
         <% if decisions.any? %>
           <div class="space-y-2">
             <% decisions.each do |item| %>
@@ -27,11 +26,11 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-sm text-[var(--mi-text-secondary)]">No decisions extracted.</p>
+          <p class="text-sm text-[var(--mi-text)]/70">No decisions extracted.</p>
         <% end %>
       </div>
       <div>
-        <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)] mb-2">Action items</p>
+        <p class="mb-2 text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Action items</p>
         <% if actions.any? %>
           <div class="space-y-2">
             <% actions.each do |item| %>
@@ -39,7 +38,7 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-sm text-[var(--mi-text-secondary)]">No action items extracted.</p>
+          <p class="text-sm text-[var(--mi-text)]/70">No action items extracted.</p>
         <% end %>
       </div>
     </div>

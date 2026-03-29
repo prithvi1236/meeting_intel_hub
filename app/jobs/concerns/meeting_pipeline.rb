@@ -24,6 +24,7 @@ module MeetingPipeline
 
       meeting.update!(status: :completed)
       MeetingProcessingChannel.broadcast_to(meeting, { step: "complete", status: "completed" })
+      meeting.broadcast_card_refresh!
       %i[embed extract sentiment].each { |p| Rails.cache.delete(cache_key(id, p)) }
     end
 

@@ -18,6 +18,15 @@ class Meeting < ApplicationRecord
     status == "processing" || status == "pending"
   end
 
+  def broadcast_card_refresh!
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "meeting_#{id}",
+      target: ActionView::RecordIdentifier.dom_id(self, :card),
+      partial: "projects/meeting_card",
+      locals: { project: project, meeting: reload }
+    )
+  end
+
   private
     def sync_project_overall_sentiment_from_meetings
       return unless project_id

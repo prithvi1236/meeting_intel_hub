@@ -14,7 +14,7 @@ class SentimentAnalysisJob < ApplicationJob
 
     MeetingProcessingChannel.broadcast_to(meeting, { step: "sentiment", status: "started" })
 
-    segments = transcript.parsed_segments
+    segments = transcript.parsed_segments_normalized.reject { |s| s["text"].blank? }
     if segments.blank?
       MeetingProcessingChannel.broadcast_to(meeting, { step: "sentiment", status: "completed" })
       MeetingPipeline.mark_sentiment!(meeting_id)

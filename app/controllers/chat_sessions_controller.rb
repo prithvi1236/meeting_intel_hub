@@ -43,7 +43,7 @@ class ChatSessionsController < ApplicationController
     nested = params[:meeting_id].present?
     @chat_session.destroy
     if nested
-      redirect_to project_meeting_path(@project, @meeting)
+      redirect_to project_path(@project)
     else
       redirect_to project_chat_sessions_path(@project)
     end

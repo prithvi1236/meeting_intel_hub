@@ -1,0 +1,64 @@
+<%# locals: project, meeting %>
+<% if meeting.processing? %>
+  <article
+    id="<%= dom_id(meeting, :card) %>"
+    class="relative flex min-h-[8.5rem] w-[17rem] shrink-0 snap-start snap-always flex-col rounded-xl border border-dashed border-[var(--mi-teal)]/40 bg-gradient-to-b from-[var(--mi-teal)]/[0.08] via-[var(--mi-surface)] to-[var(--mi-surface)] px-4 py-3.5 shadow-[inset_0_1px_0_0_rgba(0,199,168,0.12)]"
+    aria-busy="true"
+    aria-label="Meeting processing"
+  >
+    <p class="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-[var(--mi-text)]"><%= meeting.title %></p>
+    <p class="mt-3 inline-flex w-fit items-center gap-2 rounded-md border border-[var(--mi-teal)]/25 bg-[var(--mi-teal)]/[0.09] px-2.5 py-1 text-[11px] font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-teal)]">
+      <span class="relative flex h-2 w-2" aria-hidden="true">
+        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--mi-teal)] opacity-40 motion-reduce:hidden"></span>
+        <span class="relative inline-flex h-2 w-2 rounded-full bg-[var(--mi-teal)]"></span>
+      </span>
+      Processing
+    </p>
+    <p class="mt-auto pt-3 text-xs leading-relaxed text-[var(--mi-text-secondary)]">
+      <%= meeting.meeting_date&.to_fs(:long) || meeting.transcript&.detected_meeting_date&.to_fs(:long) || "No date" %>
+    </p>
+  </article>
+<% else %>
+  <% status_pill =
+       case meeting.status
+       when "completed"
+         "border-[var(--mi-green)]/30 bg-[var(--mi-green)]/[0.12] text-[var(--mi-green)]"
+       when "failed"
+         "border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.1] text-[var(--mi-red)]"
+       else
+         "border-[var(--mi-border)] bg-[var(--mi-bg)]/50 text-[var(--mi-text-secondary)]"
+       end %>
+  <article
+    id="<%= dom_id(meeting, :card) %>"
+    class="group flex min-h-[8.5rem] w-[17rem] shrink-0 snap-start snap-always cursor-pointer flex-col rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3.5 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[var(--mi-teal)]/45 hover:shadow-md active:translate-y-0 active:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-bg)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+    role="button"
+    tabindex="0"
+    data-action="click->meeting-detail#open keydown.enter->meeting-detail#open keydown.space->meeting-detail#open"
+    data-meeting-detail-peek-url-value="<%= peek_project_meeting_path(project, meeting) %>"
+  >
+    <p class="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-[var(--mi-text)] group-hover:text-[var(--mi-text)]"><%= meeting.title %></p>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <span class="rounded-md border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= status_pill %>">
+        <%= meeting.status %>
+      </span>
+      <span class="text-xs text-[var(--mi-text-secondary)]">
+        <%= meeting.meeting_date&.to_fs(:long) || meeting.transcript&.detected_meeting_date&.to_fs(:long) || "No date" %>
+      </span>
+    </div>
+    <% if meeting.word_count.to_i.positive? || meeting.speaker_count.to_i.positive? %>
+      <p class="mt-auto border-t border-[var(--mi-border)]/80 pt-2.5 text-[11px] leading-relaxed text-[var(--mi-text-secondary)]">
+        <% if meeting.word_count.to_i.positive? %>
+          <span class="font-mono-mi tabular-nums text-[var(--mi-text)]/90"><%= number_with_delimiter(meeting.word_count) %></span> words
+        <% end %>
+        <% if meeting.speaker_count.to_i.positive? %>
+          <% if meeting.word_count.to_i.positive? %>
+            <span class="mx-1.5 text-[var(--mi-border)]" aria-hidden="true">·</span>
+          <% end %>
+          <span class="font-mono-mi tabular-nums text-[var(--mi-text)]/90"><%= meeting.speaker_count %></span> speakers
+        <% end %>
+      </p>
+    <% else %>
+      <div class="mt-auto" aria-hidden="true"></div>
+    <% end %>
+  </article>
+<% end %>

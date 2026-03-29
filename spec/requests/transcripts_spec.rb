@@ -19,7 +19,7 @@ RSpec.describe "Transcripts", type: :request do
         post project_meeting_transcripts_path(project, meeting), params: { transcript_file: file }
       end.to have_enqueued_job(TranscriptProcessingJob)
 
-      expect(response).to redirect_to(project_meeting_path(project, meeting))
+      expect(response).to redirect_to(project_path(project))
       expect(meeting.reload.transcript).to be_present
       expect(meeting.transcript.file_name).to include("engineering_sync")
     end
@@ -29,7 +29,7 @@ RSpec.describe "Transcripts", type: :request do
         post project_meeting_transcripts_path(project, meeting), params: {}
       end.not_to have_enqueued_job(TranscriptProcessingJob)
 
-      expect(response).to redirect_to(project_meeting_path(project, meeting))
+      expect(response).to redirect_to(project_path(project))
       expect(flash[:alert]).to eq("Choose a file.")
     end
 
@@ -45,7 +45,7 @@ RSpec.describe "Transcripts", type: :request do
         post project_meeting_transcripts_path(project, meeting), params: { transcript_file: file }
       end.not_to have_enqueued_job(TranscriptProcessingJob)
 
-      expect(response).to redirect_to(project_meeting_path(project, meeting))
+      expect(response).to redirect_to(project_path(project))
       expect(flash[:alert]).to include(".txt")
     end
 
@@ -61,11 +61,11 @@ RSpec.describe "Transcripts", type: :request do
         post project_meeting_transcripts_path(project, meeting), params: { transcript_file: file }
       end.not_to have_enqueued_job(TranscriptProcessingJob)
 
-      expect(response).to redirect_to(project_meeting_path(project, meeting))
+      expect(response).to redirect_to(project_path(project))
       expect(flash[:alert]).to match(/empty/i)
     end
 
-    it "returns turbo_stream with inline error for invalid file when Accept is turbo_stream" do
+    it "redirects with alert for invalid file when Accept is turbo_stream" do
       file = Rack::Test::UploadedFile.new(
         StringIO.new("nope"),
         "text/plain",
@@ -77,18 +77,8 @@ RSpec.describe "Transcripts", type: :request do
         params: { transcript_file: file },
         headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
-      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include("transcript-upload-errors")
-      expect(response.body).to match(/WebVTT|Allowed types/i)
-    end
-  end
-
-  describe "DELETE /projects/:project_id/meetings/:meeting_id/transcripts/:id" do
-    it "removes the transcript" do
-      transcript = create(:transcript, meeting: meeting)
-      delete project_meeting_transcript_path(project, meeting, transcript)
-      expect(response).to redirect_to(project_meeting_path(project, meeting))
-      expect(meeting.reload.transcript).to be_nil
+      expect(response).to redirect_to(project_path(project))
+      expect(flash[:alert]).to match(/WebVTT|Allowed types/i)
     end
   end
 end

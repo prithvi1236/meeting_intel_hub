@@ -62,6 +62,7 @@ class TranscriptProcessingJob < ApplicationJob
   rescue StandardError => e
     meeting&.update(status: :failed, processing_error: e.message)
     broadcast_step(meeting, "error", "failed", message: e.message) if meeting
+    meeting&.broadcast_card_refresh!
     raise
   end
 

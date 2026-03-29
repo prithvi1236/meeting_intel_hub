@@ -10,7 +10,7 @@ export default class extends Controller {
     }
     const el = event.currentTarget
     const url = el.dataset.meetingDetailPeekUrlValue
-    if (!url) return
+    if (!url?.trim()) return
     this.frameTarget.src = url
     this.dialogTarget.showModal()
   }

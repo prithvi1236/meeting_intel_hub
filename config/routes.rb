@@ -12,7 +12,7 @@ Rails.application.routes.draw do
     resources :transcript_previews, only: %i[create]
     resources :meeting_imports, only: %i[create]
     resources :meetings do
-      resources :transcripts, only: %i[create destroy]
+      resources :transcripts, only: %i[create]
       resources :extracted_items, only: %i[index update destroy]
       resources :chat_sessions, only: %i[create show destroy] do
         resources :chat_messages, only: %i[create]
