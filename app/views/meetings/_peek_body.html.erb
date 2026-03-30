@@ -91,24 +91,21 @@
         </div>
       </div>
 
-      <div class="<%= panel %> p-3.5">
-        <%= render "meetings/transcript_summary", meeting: meeting, transcript: transcript, project: project %>
-      </div>
-    </section>
-
-    <div class="flex min-h-0 flex-col gap-4 overflow-hidden lg:h-full lg:gap-5">
-      <section class="<%= panel %> flex min-h-0 max-h-[min(50vh,400px)] shrink-0 flex-col overflow-hidden p-0" aria-label="Decisions and actions">
-        <p class="<%= panel_header %> shrink-0 bg-[var(--mi-surface)]/60">Actions &amp; decisions</p>
-        <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
-          <%= render "meetings/extracted_items_inner", meeting: meeting, modal: true %>
-        </div>
-      </section>
       <section class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0" aria-label="Sentiment">
         <p class="<%= panel_header %> shrink-0 bg-[var(--mi-surface)]/60">Sentiment</p>
         <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
           <%= render "meetings/sentiment_dashboard", meeting: meeting %>
         </div>
       </section>
-    </div>
+    </section>
+
+    <section class="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-full" aria-label="Extracted items">
+      <div class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+        <p class="<%= panel_header %> shrink-0 bg-[var(--mi-surface)]/60">Extracted items</p>
+        <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
+          <%= render "meetings/extracted_items_inner", meeting: meeting, modal: true %>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
