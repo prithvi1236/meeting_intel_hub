@@ -25,4 +25,21 @@ RSpec.describe Project, type: :model do
       expect(project.last_meeting_date).to eq(Date.new(2026, 3, 15))
     end
   end
+
+  describe "destroy with transcripts" do
+    it "removes project and transcript file attachments without error" do
+      project = create(:project)
+      meeting = create(:meeting, project: project)
+      transcript = create(:transcript, meeting: meeting)
+      transcript.file.attach(
+        io: StringIO.new("hello"),
+        filename: "notes.txt",
+        content_type: "text/plain"
+      )
+
+      expect { project.destroy! }.to change(Project, :count).by(-1)
+        .and change(Meeting, :count).by(-1)
+        .and change(Transcript, :count).by(-1)
+    end
+  end
 end

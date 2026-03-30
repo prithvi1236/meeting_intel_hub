@@ -8,6 +8,7 @@ class Project < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
 
   before_validation :assign_slug
+  before_destroy :purge_transcript_file_attachments
 
   scope :ordered, -> { order(updated_at: :desc) }
 
@@ -16,6 +17,40 @@ class Project < ApplicationRecord
   end
 
   private
+    # Strip ActiveStorage rows before cascade destroy so purging never runs on a nil Transcript
+    # (e.g. legacy record_id type mismatch). Orphan Transcript attachments are removed too.
+    def purge_transcript_file_attachments
+      transcript_ids = Transcript.where(meeting_id: meeting_ids).pluck(:id)
+      if transcript_ids.any?
+        downcased_ids = transcript_ids.map { |id| id.to_s.downcase }
+        ActiveStorage::Attachment.where(record_type: "Transcript").where(
+          "LOWER(TRIM(active_storage_attachments.record_id)) IN (?)",
+          downcased_ids
+        ).find_each { |attachment| purge_attachment_safe(attachment) }
+      end
+
+      ActiveStorage::Attachment.where(record_type: "Transcript").where(
+        <<~SQL.squish
+          NOT EXISTS (
+            SELECT 1 FROM transcripts t
+            WHERE LOWER(TRIM(t.id::text)) = LOWER(TRIM(active_storage_attachments.record_id))
+          )
+        SQL
+      ).find_each { |attachment| purge_attachment_safe(attachment) }
+    end
+
+    def purge_attachment_safe(attachment)
+      attachment.purge
+    rescue StandardError => e
+      Rails.logger.warn(
+        "[Project#purge_attachment_safe] purge failed, deleting rows: #{e.class}: #{e.message}"
+      )
+      aid = attachment.id
+      bid = attachment.blob_id
+      ActiveStorage::Attachment.where(id: aid).delete_all
+      ActiveStorage::Blob.where(id: bid).delete_all if bid.present?
+    end
+
     def assign_slug
       return if slug.present?
 

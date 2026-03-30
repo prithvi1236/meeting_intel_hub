@@ -17,6 +17,9 @@ class ExtractedItem < ApplicationRecord
     def refresh_project_action_items_count
       pr = meeting&.project
       return unless pr
+      # Project may already be destroyed in the same cascade (e.g. deleting a project);
+      # after_commit still runs but update_column would raise on a destroyed instance.
+      return if pr.destroyed?
 
       count = ExtractedItem.action_items.joins(:meeting).where(meetings: { project_id: pr.id }).count
       pr.update_column(:total_action_items_count, count)

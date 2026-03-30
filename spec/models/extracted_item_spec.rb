@@ -19,5 +19,14 @@ RSpec.describe ExtractedItem, type: :model do
       project.reload
       expect(project.total_action_items_count).to eq(1)
     end
+
+    it "does not raise when the project is destroyed (cascade deletes meetings and items)" do
+      project = create(:project)
+      meeting = create(:meeting, project: project)
+      create(:extracted_item, meeting: meeting, item_type: "action_item")
+
+      expect { project.destroy! }.not_to raise_error
+      expect(Project.exists?(project.id)).to be false
+    end
   end
 end

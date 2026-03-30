@@ -23,7 +23,7 @@ class ProjectsController < ApplicationController
   def create
     @project = current_user.projects.build(project_params)
     if @project.save
-      redirect_to @project, notice: "Project created."
+      redirect_to @project, notice: "Project created.", status: :see_other
     else
       render :new, status: :unprocessable_entity
     end
@@ -31,15 +31,29 @@ class ProjectsController < ApplicationController
 
   def update
     if @project.update(project_params)
-      redirect_to @project, notice: "Project updated."
+      redirect_to @project, notice: "Project updated.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
-    @project.destroy
-    redirect_to projects_url, notice: "Project deleted."
+    if @project.destroy
+      redirect_to projects_path, notice: "Project deleted.", status: :see_other
+    else
+      Rails.logger.error(
+        "[ProjectsController#destroy] destroy returned false id=#{@project.id} errors=#{@project.errors.full_messages.inspect}"
+      )
+      redirect_to projects_path, alert: "Could not delete project.", status: :see_other
+    end
+  rescue StandardError => e
+    Rails.logger.error("[ProjectsController#destroy] #{e.class}: #{e.message}\n#{e.backtrace&.first(25)&.join("\n")}")
+    alert = if Rails.env.development?
+      "Could not delete project: #{e.class} — see log/development.log."
+    else
+      "Could not delete project. If this continues, contact support."
+    end
+    redirect_to projects_path, alert: alert, status: :see_other
   end
 
   private
