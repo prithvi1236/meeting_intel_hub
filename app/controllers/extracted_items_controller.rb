@@ -12,7 +12,7 @@ class ExtractedItemsController < ApplicationController
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
-            dom_id(@item),
+            ActionView::RecordIdentifier.dom_id(@item),
             partial: "extracted_items/item",
             locals: { item: @item, project: @project, meeting: @meeting }
           )
@@ -27,7 +27,7 @@ class ExtractedItemsController < ApplicationController
   def destroy
     @item.destroy
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.remove(dom_id(@item)) }
+      format.turbo_stream { render turbo_stream: turbo_stream.remove(ActionView::RecordIdentifier.dom_id(@item)) }
       format.html { redirect_to project_path(@project), status: :see_other }
     end
   end

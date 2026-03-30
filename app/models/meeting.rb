@@ -18,6 +18,13 @@ class Meeting < ApplicationRecord
     status == "processing" || status == "pending"
   end
 
+  # Names for assigning action items: transcript turns plus any project-level Speaker rows.
+  def speaker_names_for_owner_picklist
+    from_segments = transcript_speaker_names_from_segments
+    from_project = project.speakers.pluck(:name).map { |n| n.to_s.strip }.reject(&:blank?)
+    (from_segments + from_project).uniq.sort
+  end
+
   def broadcast_card_refresh!
     Turbo::StreamsChannel.broadcast_replace_to(
       "meeting_#{id}",
@@ -28,6 +35,18 @@ class Meeting < ApplicationRecord
   end
 
   private
+    def transcript_speaker_names_from_segments
+      segments = transcript&.parsed_segments
+      return [] if segments.blank?
+
+      Array(segments).filter_map do |seg|
+        next unless seg.is_a?(Hash)
+
+        h = seg.with_indifferent_access
+        h[:speaker].to_s.strip.presence
+      end.uniq
+    end
+
     def sync_project_overall_sentiment_from_meetings
       return unless project_id
 

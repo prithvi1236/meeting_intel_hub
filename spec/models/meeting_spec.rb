@@ -24,6 +24,26 @@ RSpec.describe Meeting, type: :model do
     end
   end
 
+  describe "#speaker_names_for_owner_picklist" do
+    it "returns sorted unique names from parsed transcript segments and project speakers" do
+      project = create(:project)
+      meeting = create(:meeting, project: project)
+      create(:transcript, meeting: meeting, parsed_segments: [
+        { "speaker" => "Sam", "text" => "Hi" },
+        { "speaker" => "Alex", "text" => "Hey" },
+        { "speaker" => "Sam", "text" => "Bye" }
+      ])
+      create(:speaker, project: project, name: "Jordan")
+
+      expect(meeting.speaker_names_for_owner_picklist).to eq(%w[Alex Jordan Sam])
+    end
+
+    it "returns an empty array when there is no transcript data" do
+      meeting = create(:meeting)
+      expect(meeting.speaker_names_for_owner_picklist).to eq([])
+    end
+  end
+
   describe "project sentiment sync" do
     it "averages overall_sentiment_score from completed meetings when a meeting is saved" do
       project = create(:project)
