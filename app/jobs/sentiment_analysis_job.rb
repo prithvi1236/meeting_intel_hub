@@ -71,7 +71,8 @@ class SentimentAnalysisJob < ApplicationJob
               "score" => res["score"].to_f,
               "label" => res["label"],
               "dominant_emotion" => res["dominant_emotion"],
-              "speakers" => Array(res["speakers"])
+              "speakers" => Array(res["speakers"]),
+              "transcript_snippet" => text
             }
           rescue HuggingFaceService::Error
             windows << {
@@ -80,7 +81,8 @@ class SentimentAnalysisJob < ApplicationJob
               "score" => 0.0,
               "label" => "discussion",
               "dominant_emotion" => "neutral",
-              "speakers" => lines.map { |s| s["speaker"] }.uniq
+              "speakers" => lines.map { |s| s["speaker"] }.uniq,
+              "transcript_snippet" => text
             }
           end
         end

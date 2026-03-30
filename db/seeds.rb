@@ -18,8 +18,24 @@ end
 def sentiment_demo
   {
     "timeline" => [
-      { "window_start" => 0, "window_end" => 180, "score" => 0.65, "label" => "consensus", "dominant_emotion" => "engaged", "speakers" => %w[Alex Jordan] },
-      { "window_start" => 180, "window_end" => 360, "score" => -0.2, "label" => "tension", "dominant_emotion" => "frustrated", "speakers" => %w[Sam] }
+      {
+        "window_start" => 0,
+        "window_end" => 180,
+        "score" => 0.65,
+        "label" => "consensus",
+        "dominant_emotion" => "engaged",
+        "speakers" => %w[Alex Jordan],
+        "transcript_snippet" => "Alex: We agreed to ship the dashboard redesign next Friday.\nJordan: I'll own the API integration."
+      },
+      {
+        "window_start" => 180,
+        "window_end" => 360,
+        "score" => -0.2,
+        "label" => "tension",
+        "dominant_emotion" => "frustrated",
+        "speakers" => %w[Sam],
+        "transcript_snippet" => "Sam: I'm frustrated we slipped twice; we need clearer acceptance criteria."
+      }
     ],
     "per_speaker" => [
       { "name" => "Alex", "average_score" => 0.55, "dominant_emotion" => "engaged", "segment_count" => 2 },

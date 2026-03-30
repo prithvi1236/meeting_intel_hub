@@ -19,9 +19,39 @@
     <canvas
       data-sentiment-timeline-target="canvas"
       data-action="click->sentiment-timeline#click"
-      class="h-10 w-full cursor-pointer rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)]"
-      aria-label="Sentiment timeline"
+      class="h-10 w-full min-w-[120px] cursor-pointer rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)]"
+      aria-label="Sentiment timeline; click a segment to read transcript"
     ></canvas>
+    <% if timeline.any? %>
+      <p
+        data-sentiment-timeline-target="snippetMeta"
+        class="mt-2 text-xs text-[var(--mi-text-secondary)]"
+      >
+        Click a colored section to view the transcript for that period.
+      </p>
+      <pre
+        data-sentiment-timeline-target="snippet"
+        class="mt-2 hidden max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] p-3 font-mono-mi text-[13px] leading-relaxed text-[var(--mi-text)] [scrollbar-width:thin]"
+      ></pre>
+      <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-[10px] font-mono-mi uppercase tracking-wide text-[var(--mi-text-secondary)]" role="group" aria-label="Timeline color key">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2.5 w-4 shrink-0 rounded-sm bg-[var(--mi-green)]"></span>
+          Positive / consensus
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2.5 w-4 shrink-0 rounded-sm bg-[var(--mi-teal)]"></span>
+          Discussion
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2.5 w-4 shrink-0 rounded-sm bg-[var(--mi-amber)]"></span>
+          Tension
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2.5 w-4 shrink-0 rounded-sm bg-[var(--mi-red)]"></span>
+          Negative / conflict
+        </span>
+      </div>
+    <% end %>
   <% end %>
 
   <% speakers = Array(sentiment[:per_speaker]).filter_map { |row| row.is_a?(Hash) ? row.with_indifferent_access : nil } %>
