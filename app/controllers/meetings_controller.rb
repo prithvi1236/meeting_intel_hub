@@ -52,7 +52,7 @@ class MeetingsController < ApplicationController
       end
     end
     TranscriptProcessingJob.perform_later(transcript_id) if transcript_id
-    redirect_to project_path(@project), notice: "Meeting created."
+    redirect_to project_path(@project), notice: "Meeting created.", status: :see_other
   rescue ActiveRecord::RecordInvalid
     render :new, status: :unprocessable_entity
   end
@@ -62,7 +62,7 @@ class MeetingsController < ApplicationController
       if turbo_frame_request?
         redirect_to peek_project_meeting_path(@project, @meeting), status: :see_other
       else
-        redirect_to project_path(@project), notice: "Meeting updated."
+        redirect_to project_path(@project), notice: "Meeting updated.", status: :see_other
       end
     else
       render :edit, status: :unprocessable_entity
@@ -71,7 +71,7 @@ class MeetingsController < ApplicationController
 
   def destroy
     @meeting.destroy
-    redirect_to project_path(@project), notice: "Meeting removed."
+    redirect_to project_path(@project), notice: "Meeting removed.", status: :see_other
   end
 
   def sentiment
@@ -89,9 +89,9 @@ class MeetingsController < ApplicationController
       Rails.cache.delete(MeetingPipeline.cache_key(@meeting.id, :extract))
       Rails.cache.delete(MeetingPipeline.cache_key(@meeting.id, :sentiment))
       TranscriptProcessingJob.perform_later(tr.id)
-      redirect_to project_path(@project), notice: "Reprocessing started."
+      redirect_to project_path(@project), notice: "Reprocessing started.", status: :see_other
     else
-      redirect_to project_path(@project), alert: "No transcript to reprocess."
+      redirect_to project_path(@project), alert: "No transcript to reprocess.", status: :see_other
     end
   end
 

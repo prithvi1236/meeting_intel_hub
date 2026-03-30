@@ -17,7 +17,7 @@ class ExtractedItemsController < ApplicationController
             locals: { item: @item, project: @project, meeting: @meeting }
           )
         end
-        format.html { redirect_to project_path(@project) }
+        format.html { redirect_to project_path(@project), status: :see_other }
       end
     else
       head :unprocessable_entity
@@ -28,7 +28,7 @@ class ExtractedItemsController < ApplicationController
     @item.destroy
     respond_to do |format|
       format.turbo_stream { render turbo_stream: turbo_stream.remove(dom_id(@item)) }
-      format.html { redirect_to project_path(@project) }
+      format.html { redirect_to project_path(@project), status: :see_other }
     end
   end
 

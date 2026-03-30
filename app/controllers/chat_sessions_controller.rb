@@ -19,11 +19,11 @@ class ChatSessionsController < ApplicationController
         meeting: @meeting,
         title: params.dig(:chat_session, :title).presence || "Chat"
       )
-      redirect_to project_meeting_chat_session_path(@project, @meeting, @chat_session)
+      redirect_to project_meeting_chat_session_path(@project, @meeting, @chat_session), status: :see_other
     else
       @chat_session = @project.chat_sessions.build(chat_session_params.merge(meeting_id: nil))
       if @chat_session.save
-        redirect_to project_chat_session_path(@project, @chat_session)
+        redirect_to project_chat_session_path(@project, @chat_session), status: :see_other
       else
         render :new, status: :unprocessable_entity
       end
@@ -43,9 +43,9 @@ class ChatSessionsController < ApplicationController
     nested = params[:meeting_id].present?
     @chat_session.destroy
     if nested
-      redirect_to project_path(@project)
+      redirect_to project_path(@project), status: :see_other
     else
-      redirect_to project_chat_sessions_path(@project)
+      redirect_to project_chat_sessions_path(@project), status: :see_other
     end
   end
 
