@@ -1,6 +1,8 @@
 <% content_for :title, @project.name %>
 <% content_for :breadcrumb do %>
-  <%= link_to "Projects", projects_path, class: "hover:underline" %> / <%= @project.name %>
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= @project.name %>
 <% end %>
 
 <div
@@ -31,7 +33,7 @@
             project_path(@project),
             method: :delete,
             class: "rounded-[8px] border border-[var(--mi-red)] px-3 py-2 text-sm text-[var(--mi-red)]",
-            form: { data: { turbo_confirm: "Delete this project and all its meetings?" } } %>
+            form: { data: { turbo_confirm: "Delete this project and all its meetings?", turbo_frame: "_top" } } %>
     </div>
   </div>
 

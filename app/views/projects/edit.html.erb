@@ -1,6 +1,9 @@
 <% content_for :title, "Edit project" %>
 <% content_for :breadcrumb do %>
-  <%= link_to @project.name, @project %> / Edit
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  Edit
 <% end %>
 <h1 class="mb-6 text-2xl font-semibold">Edit project</h1>
 <%= render "form", project: @project %>

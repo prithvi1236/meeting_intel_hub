@@ -1,6 +1,9 @@
 <% content_for :title, "New meeting" %>
 <% content_for :breadcrumb do %>
-  <%= link_to @project.name, @project %> / New meeting
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  New meeting
 <% end %>
 
 <h1 class="mb-2 text-2xl font-semibold">Upload meeting</h1>

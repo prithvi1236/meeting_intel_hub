@@ -1,7 +1,9 @@
 <% content_for :title, @chat_session.title.presence || "Chat" %>
 <% content_for :breadcrumb do %>
-  <%= link_to @project.name, @project %> /
-  <%= link_to "Chats", project_chat_sessions_path(@project) %> /
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  <%= link_to "Chats", project_chat_sessions_path(@project), class: "hover:underline" %> /
   <%= @chat_session.title.presence || "Chat" %>
 <% end %>
 

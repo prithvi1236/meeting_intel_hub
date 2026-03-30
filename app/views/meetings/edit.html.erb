@@ -29,8 +29,9 @@
 <% else %>
   <% content_for :title, "Edit meeting" %>
   <% content_for :breadcrumb do %>
-    <%= link_to "Projects", projects_path %> /
-    <%= link_to @project.name, @project %> /
+    <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+    <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+    <%= link_to @project.name, @project, class: "hover:underline" %> /
     Edit <%= @meeting.title %>
   <% end %>
 

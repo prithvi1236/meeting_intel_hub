@@ -1,6 +1,9 @@
 <% content_for :title, "Project chats" %>
 <% content_for :breadcrumb do %>
-  <%= link_to @project.name, @project %> / Chats
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  Chats
 <% end %>
 
 <div class="mb-6 flex justify-between gap-4">
