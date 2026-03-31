@@ -19,15 +19,16 @@ RSpec.describe ExportService do
   end
 
   describe ".to_csv" do
-    it "includes headers and rows for each extracted item in order" do
+    it "exports split sections that match extracted item tables" do
       csv = described_class.to_csv(meeting)
       lines = csv.lines.map(&:chomp)
-      expect(lines.first).to include("Type")
-      expect(lines.first).to include("Description")
-      expect(lines.first).to include("Assigned")
+      expect(lines[0]).to include("Decisions")
+      expect(lines[1]).to include("Description")
+      expect(lines[1]).to include("Assigned")
+      expect(csv).to include("Action items")
       expect(csv).to include("Ship MVP")
       expect(csv).to include("Write report")
-      expect(csv).to include("action_item")
+      expect(csv).not_to include("action_item")
     end
   end
 
@@ -37,6 +38,7 @@ RSpec.describe ExportService do
       expect(pdf).to start_with("%PDF")
       expect(pdf.bytesize).to be > 500
       expect(pdf).to include("53686970204d5650") # "Ship MVP" as hex in TJ text array
+      expect(pdf).to include("4465636973696f6e73") # "Decisions" as hex
     end
   end
 end
