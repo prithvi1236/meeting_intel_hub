@@ -15,15 +15,20 @@ Rails.application.routes.draw do
       resources :transcripts, only: %i[create]
       resources :extracted_items, only: %i[index update destroy]
       resources :chat_sessions, only: %i[create show destroy] do
+        member do
+          delete :clear_messages
+        end
         resources :chat_messages, only: %i[create]
       end
       member do
         get :sentiment
-        get :peek
         post :reprocess
       end
     end
-    resources :chat_sessions, only: %i[index new create show] do
+    resources :chat_sessions, only: %i[index new create show destroy] do
+      member do
+        delete :clear_messages
+      end
       resources :chat_messages, only: %i[create]
     end
   end

@@ -7,7 +7,7 @@
 
 <div
   class="space-y-6"
-  data-controller="meeting-detail meeting-upload-modal"
+  data-controller="meeting-upload-modal"
   data-meeting-upload-modal-preview-url-value="<%= project_transcript_previews_path(@project) %>"
   data-meeting-upload-modal-import-url-value="<%= project_meeting_imports_path(@project) %>"
   data-meeting-upload-modal-group-value="<%= @group %>"
@@ -73,39 +73,6 @@
       grouped: @grouped,
       group: @group,
       group_sort: @group_sort %>
-
-  <dialog
-    data-meeting-detail-target="dialog"
-    class="fixed left-1/2 top-1/2 z-50 w-[min(100vw-2rem,960px)] max-h-[min(100vh-2rem,92vh)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[var(--mi-border)] bg-[var(--mi-surface)] p-0 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.55)] backdrop:bg-black/65 backdrop:backdrop-blur-sm"
-    aria-label="Meeting details"
-  >
-    <div class="flex max-h-[min(100vh-2rem,92vh)] flex-col">
-      <div
-        class="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--mi-border)] bg-gradient-to-r from-[var(--mi-bg)]/40 via-[var(--mi-surface)] to-[var(--mi-surface)] px-4 py-3"
-      >
-        <p class="text-[11px] font-mono-mi font-medium uppercase tracking-[0.12em] text-[var(--mi-text-secondary)]">
-          Preview
-        </p>
-        <button
-          type="button"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] text-[var(--mi-text)] transition-colors hover:border-[var(--mi-teal)]/40 hover:bg-[var(--mi-teal)]/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]"
-          data-action="click->meeting-detail#close"
-          aria-label="Close preview"
-        >
-          <%= render "shared/mi_icon", name: :close, class: "h-5 w-5" %>
-        </button>
-      </div>
-      <div
-        class="min-h-0 flex-1 overflow-y-auto bg-[var(--mi-bg)]/20 p-4 md:p-5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]"
-      >
-        <turbo-frame
-          id="meeting-detail"
-          data-meeting-detail-target="frame"
-          class="block min-h-[200px]"
-        ></turbo-frame>
-      </div>
-    </div>
-  </dialog>
 
   <%= render "projects/upload_meeting_modal" %>
 </div>

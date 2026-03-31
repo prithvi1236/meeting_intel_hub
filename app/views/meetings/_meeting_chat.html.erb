@@ -1,0 +1,62 @@
+<%# locals: project, meeting, chat_session, messages %>
+<% chat_icon_btn = "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] text-[var(--mi-text)] transition-colors hover:border-[var(--mi-red)]/35 hover:bg-[var(--mi-red)]/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
+<% send_btn = "inline-flex h-[2.625rem] min-w-[2.75rem] shrink-0 items-center justify-center self-end rounded-[8px] bg-[var(--mi-teal)] px-3 text-[#0f0f0f] transition-colors hover:bg-[var(--mi-teal)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-bg)]" %>
+<%= turbo_stream_from "chat_session_#{chat_session.id}" %>
+
+<div
+  class="flex min-h-[17rem] max-h-[min(85vh,720px)] flex-1 flex-col overflow-hidden"
+  data-controller="chat"
+  data-chat-session-id-value="<%= chat_session.id %>"
+>
+  <div class="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--mi-border)] bg-[var(--mi-surface)]/60 px-3 py-2.5">
+    <p class="m-0 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85">
+      Chat
+    </p>
+    <%= button_to clear_messages_project_meeting_chat_session_path(project, meeting, chat_session),
+          method: :delete,
+          class: chat_icon_btn,
+          title: "Clear chat",
+          aria: { label: "Clear chat" },
+          form: {
+            class: "inline",
+            data: { turbo_confirm: "Clear all messages in this chat?" }
+          } do %>
+      <%= render "shared/mi_icon", name: :trash, class: "h-5 w-5" %>
+    <% end %>
+  </div>
+
+  <div
+    id="chat-messages"
+    data-chat-target="messages"
+    class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]"
+  >
+    <% messages.each do |message| %>
+      <%= render "chat_messages/message", message: message %>
+    <% end %>
+  </div>
+
+  <div
+    data-chat-target="typing"
+    class="hidden px-3.5 pb-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]"
+  >
+    Assistant is typing…
+  </div>
+
+  <%= form_with url: project_meeting_chat_session_chat_messages_path(project, meeting, chat_session),
+        data: { action: "turbo:submit-start->chat#prepareSubmit turbo:submit-end->chat#turboAfterSubmit" } do |f| %>
+    <div class="flex shrink-0 gap-2 border-t border-[var(--mi-border)] bg-[var(--mi-surface)] p-3.5">
+      <%= text_area_tag "chat_message[content]",
+            nil,
+            rows: 2,
+            data: { chat_target: "input", action: "keydown->chat#handleKeydown" },
+            class: "min-w-0 flex-1 resize-none rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm",
+            "aria-label": "Chat message" %>
+      <%= f.button type: :submit,
+            class: send_btn,
+            title: "Send",
+            aria: { label: "Send message" } do %>
+        <%= render "shared/mi_icon", name: :send, class: "h-5 w-5" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

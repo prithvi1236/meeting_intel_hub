@@ -15,27 +15,18 @@ RSpec.describe "Meetings", type: :request do
     end
   end
 
-  describe "GET /projects/:project_id/meetings/:id/peek" do
-    it "returns the turbo frame partial when processing has finished" do
-      meeting = create(:meeting, project: project, status: "completed")
-      get peek_project_meeting_path(project, meeting)
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include('turbo-frame id="meeting-detail"')
-    end
-
-    it "forbids peek while the meeting is still processing" do
-      meeting = create(:meeting, project: project, status: "processing")
-      get peek_project_meeting_path(project, meeting)
-      expect(response).to have_http_status(:forbidden)
-    end
-  end
-
   describe "GET /projects/:project_id/meetings/:id" do
-    let(:meeting) { create(:meeting, project: project) }
-
-    it "redirects to the project page" do
+    it "renders the meeting page when processing has finished" do
+      meeting = create(:meeting, project: project, status: "completed")
       get project_meeting_path(project, meeting)
-      expect(response).to redirect_to(project_path(project))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(meeting.title)
+    end
+
+    it "forbids the meeting page while the meeting is still processing" do
+      meeting = create(:meeting, project: project, status: "processing")
+      get project_meeting_path(project, meeting)
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

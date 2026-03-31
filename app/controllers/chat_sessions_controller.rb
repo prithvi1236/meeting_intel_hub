@@ -1,7 +1,7 @@
 class ChatSessionsController < ApplicationController
   before_action :set_project
   before_action :set_meeting, if: -> { params[:meeting_id].present? }
-  before_action :set_session, only: %i[show destroy]
+  before_action :set_session, only: %i[show destroy clear_messages]
 
   def index
     @sessions = @project.chat_sessions.where(meeting_id: nil).order(updated_at: :desc)
@@ -46,6 +46,24 @@ class ChatSessionsController < ApplicationController
       redirect_to project_path(@project), status: :see_other
     else
       redirect_to project_chat_sessions_path(@project), status: :see_other
+    end
+  end
+
+  def clear_messages
+    @chat_session.chat_messages.destroy_all
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update("chat-messages", "")
+      end
+      format.html do
+        fallback =
+          if params[:meeting_id].present?
+            project_meeting_chat_session_path(@project, @meeting, @chat_session)
+          else
+            project_chat_session_path(@project, @chat_session)
+          end
+        redirect_back fallback_location: fallback, status: :see_other
+      end
     end
   end
 

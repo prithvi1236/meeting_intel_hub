@@ -28,14 +28,9 @@
        else
          "border-[var(--mi-border)] bg-[var(--mi-bg)]/50 text-[var(--mi-text-secondary)]"
        end %>
-  <article
-    id="<%= dom_id(meeting, :card) %>"
-    class="group flex min-h-[8.5rem] w-[17rem] shrink-0 snap-start snap-always cursor-pointer flex-col rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3.5 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[var(--mi-teal)]/45 hover:shadow-md active:translate-y-0 active:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-bg)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-    role="button"
-    tabindex="0"
-    data-action="click->meeting-detail#open keydown.enter->meeting-detail#open keydown.space->meeting-detail#open"
-    data-meeting-detail-peek-url-value="<%= peek_project_meeting_path(project, meeting) %>"
-  >
+  <%= link_to project_meeting_path(project, meeting),
+        id: dom_id(meeting, :card),
+        class: "group flex min-h-[8.5rem] w-[17rem] shrink-0 snap-start snap-always flex-col rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3.5 no-underline shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[var(--mi-teal)]/45 hover:shadow-md active:translate-y-0 active:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-bg)] motion-reduce:transition-none motion-reduce:hover:translate-y-0" do %>
     <p class="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-[var(--mi-text)] group-hover:text-[var(--mi-text)]"><%= meeting.title %></p>
     <div class="mt-2 flex flex-wrap items-center gap-2">
       <span class="rounded-md border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= status_pill %>">
@@ -60,5 +55,5 @@
     <% else %>
       <div class="mt-auto" aria-hidden="true"></div>
     <% end %>
-  </article>
+  <% end %>
 <% end %>

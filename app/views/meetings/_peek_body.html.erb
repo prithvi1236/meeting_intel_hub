@@ -19,7 +19,7 @@
 <% panel_header = "border-b border-[var(--mi-border)] px-3 py-2.5 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85" %>
 <%= turbo_stream_from "meeting_#{meeting.id}" %>
 
-<div class="flex max-h-[min(85vh,720px)] min-h-[320px] flex-col gap-5 overflow-hidden">
+<div class="flex min-h-[calc(100vh-12rem)] flex-col gap-5 overflow-hidden">
   <header class="rounded-xl border border-[var(--mi-border)] bg-gradient-to-b from-[var(--mi-bg)]/80 to-[var(--mi-surface)] p-4 shadow-sm">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div class="min-w-0 flex-1">
@@ -40,19 +40,10 @@
         <% end %>
       </div>
       <nav class="flex flex-wrap gap-2 sm:justify-end" aria-label="Meeting actions">
-        <%= link_to "Export CSV",
-              export_items_api_v1_meeting_path(meeting, format: :csv),
-              class: btn_export,
-              data: { turbo: false } %>
-        <%= link_to "Export PDF",
-              export_items_api_v1_meeting_path(meeting, format: :pdf),
-              class: btn_export,
-              data: { turbo: false } %>
         <%= link_to edit_project_meeting_path(project, meeting),
               class: icon_btn_edit,
               aria: { label: "Edit meeting" },
-              title: "Edit meeting",
-              data: { turbo_frame: "meeting-detail" } do %>
+              title: "Edit meeting" do %>
           <%= render "shared/mi_icon", name: :pencil, class: "h-5 w-5" %>
         <% end %>
         <%= button_to project_meeting_path(project, meeting),
@@ -70,7 +61,7 @@
     </div>
   </header>
 
-  <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-2 lg:gap-5">
+  <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-3 lg:gap-5">
     <section class="flex min-h-0 flex-col gap-4 lg:h-full">
       <div class="flex min-h-0 flex-1 flex-col <%= panel %> overflow-hidden bg-[var(--mi-bg)]/35" aria-label="Transcript text">
         <p class="<%= panel_header %> bg-[var(--mi-surface)]/60">Transcript</p>
@@ -99,9 +90,33 @@
       </section>
     </section>
 
+    <section class="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-full" aria-label="Meeting chat">
+      <div class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+        <%= render "meetings/meeting_chat",
+              project: project,
+              meeting: meeting,
+              chat_session: @chat_session,
+              messages: @chat_messages %>
+      </div>
+    </section>
+
     <section class="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-full" aria-label="Extracted items">
       <div class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-        <p class="<%= panel_header %> shrink-0 bg-[var(--mi-surface)]/60">Extracted items</p>
+        <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--mi-border)] bg-[var(--mi-surface)]/60 px-3 py-2.5">
+          <p class="m-0 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85">
+            Extracted items
+          </p>
+          <nav class="flex flex-wrap items-center gap-2" aria-label="Export extracted items">
+            <%= link_to "Export CSV",
+                  export_items_api_v1_meeting_path(meeting, format: :csv),
+                  class: btn_export,
+                  data: { turbo: false } %>
+            <%= link_to "Export PDF",
+                  export_items_api_v1_meeting_path(meeting, format: :pdf),
+                  class: btn_export,
+                  data: { turbo: false } %>
+          </nav>
+        </div>
         <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
           <%= render "meetings/extracted_items_inner", meeting: meeting, modal: true %>
         </div>

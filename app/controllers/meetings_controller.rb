@@ -1,19 +1,17 @@
 class MeetingsController < ApplicationController
   before_action :set_project
-  before_action :set_meeting, only: %i[show edit update destroy sentiment reprocess peek]
+  before_action :set_meeting, only: %i[show edit update destroy sentiment reprocess]
 
   def index
     redirect_to @project
   end
 
   def show
-    redirect_to project_path(@project)
-  end
-
-  def peek
     return head :forbidden if @meeting.processing?
 
-    render layout: false
+    @chat_session = @meeting.chat_sessions.find_by(project: @project)
+    @chat_session ||= @meeting.chat_sessions.create!(project: @project, title: "Meeting chat")
+    @chat_messages = @chat_session.chat_messages.order(:created_at)
   end
 
   def new
@@ -59,11 +57,7 @@ class MeetingsController < ApplicationController
 
   def update
     if @meeting.update(meeting_params)
-      if turbo_frame_request?
-        redirect_to peek_project_meeting_path(@project, @meeting), status: :see_other
-      else
-        redirect_to project_path(@project), notice: "Meeting updated.", status: :see_other
-      end
+      redirect_to project_meeting_path(@project, @meeting), notice: "Meeting updated.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end

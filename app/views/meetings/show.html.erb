@@ -1,0 +1,15 @@
+<% content_for :title, @meeting.title %>
+<% content_for :breadcrumb do %>
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  <%= @meeting.title %>
+<% end %>
+
+<div class="mb-6">
+  <%= link_to "← Back to project",
+        project_path(@project),
+        class: "inline-flex rounded-lg border border-[var(--mi-border)] px-3 py-2 text-sm text-[var(--mi-text-secondary)] transition-colors hover:border-[var(--mi-teal)]/40 hover:text-[var(--mi-text)]" %>
+</div>
+
+<%= render "meetings/peek_body", project: @project, meeting: @meeting %>
