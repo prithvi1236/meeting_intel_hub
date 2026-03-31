@@ -1,4 +1,5 @@
 <% modal = local_assigns.fetch(:modal, false) %>
+<% edit_btn = "rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] px-2.5 py-1 text-[11px] font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text-secondary)] transition-colors hover:border-[var(--mi-teal)]/40 hover:text-[var(--mi-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40" %>
 <div class="flex flex-col gap-3">
   <% unless modal %>
     <div class="flex flex-wrap gap-2">
@@ -17,68 +18,88 @@
     <% decisions = meeting.extracted_items.decisions.order(:position, :created_at) %>
     <% actions = meeting.extracted_items.action_items.order(:position, :created_at) %>
     <% if modal %>
-      <div data-controller="extracted-items-toggle" class="flex flex-col gap-3">
-        <div
-          role="tablist"
-          aria-label="Extracted item type"
-          class="inline-flex w-full max-w-md rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)]/50 p-0.5"
-        >
-          <button
-            type="button"
-            role="tab"
-            id="peek-tab-actions"
-            aria-selected="true"
-            aria-controls="peek-panel-actions"
-            data-extracted-items-toggle-target="tabActions"
-            data-action="click->extracted-items-toggle#selectActions"
-            class="flex-1 rounded-md bg-[var(--mi-surface)] px-3 py-1.5 text-center text-xs font-mono-mi text-[var(--mi-text)] shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40"
-          >
-            Action items
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="peek-tab-decisions"
-            aria-selected="false"
-            aria-controls="peek-panel-decisions"
-            data-extracted-items-toggle-target="tabDecisions"
-            data-action="click->extracted-items-toggle#selectDecisions"
-            class="flex-1 rounded-md px-3 py-1.5 text-center text-xs font-mono-mi text-[var(--mi-text-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40"
-          >
-            Decisions
-          </button>
-        </div>
-        <div
-          id="peek-panel-actions"
-          role="tabpanel"
-          aria-labelledby="peek-tab-actions"
-          data-extracted-items-toggle-target="panelActions"
-        >
-          <% if actions.any? %>
-            <div class="space-y-2">
-              <% actions.each do |item| %>
-                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
-              <% end %>
-            </div>
-          <% else %>
-            <p class="text-sm text-[var(--mi-text)]/70">No action items extracted.</p>
-          <% end %>
-        </div>
-        <div
-          id="peek-panel-decisions"
-          role="tabpanel"
-          aria-labelledby="peek-tab-decisions"
-          data-extracted-items-toggle-target="panelDecisions"
-          class="hidden"
-        >
+      <div class="flex flex-col gap-6">
+        <div data-controller="extracted-table-edit">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Decisions</p>
+            <% if decisions.any? %>
+              <button
+                type="button"
+                class="<%= edit_btn %>"
+                data-extracted-table-edit-target="toggleButton"
+                data-action="click->extracted-table-edit#toggle"
+                aria-pressed="false"
+                aria-label="Toggle editing decisions"
+              >
+                Edit
+              </button>
+            <% end %>
+          </div>
           <% if decisions.any? %>
-            <div class="space-y-2">
-              <% decisions.each do |item| %>
-                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
-              <% end %>
+            <div data-extracted-table-edit-target="view" class="overflow-x-auto">
+              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+                <%= render "extracted_items/modal_table_head_readonly" %>
+                <tbody>
+                  <% decisions.each do |item| %>
+                    <%= render "extracted_items/modal_row_readonly", item: item, project: meeting.project, meeting: meeting %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+            <div data-extracted-table-edit-target="edit" class="hidden overflow-x-auto">
+              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+                <%= render "extracted_items/modal_table_head" %>
+                <tbody>
+                  <% decisions.each do |item| %>
+                    <%= render "extracted_items/modal_row", item: item, project: meeting.project, meeting: meeting %>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
           <% else %>
             <p class="text-sm text-[var(--mi-text)]/70">No decisions extracted.</p>
+          <% end %>
+        </div>
+
+        <div data-controller="extracted-table-edit">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Action items</p>
+            <% if actions.any? %>
+              <button
+                type="button"
+                class="<%= edit_btn %>"
+                data-extracted-table-edit-target="toggleButton"
+                data-action="click->extracted-table-edit#toggle"
+                aria-pressed="false"
+                aria-label="Toggle editing action items"
+              >
+                Edit
+              </button>
+            <% end %>
+          </div>
+          <% if actions.any? %>
+            <div data-extracted-table-edit-target="view" class="overflow-x-auto">
+              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+                <%= render "extracted_items/modal_table_head_readonly" %>
+                <tbody>
+                  <% actions.each do |item| %>
+                    <%= render "extracted_items/modal_row_readonly", item: item, project: meeting.project, meeting: meeting %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+            <div data-extracted-table-edit-target="edit" class="hidden overflow-x-auto">
+              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+                <%= render "extracted_items/modal_table_head" %>
+                <tbody>
+                  <% actions.each do |item| %>
+                    <%= render "extracted_items/modal_row", item: item, project: meeting.project, meeting: meeting %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-sm text-[var(--mi-text)]/70">No action items extracted.</p>
           <% end %>
         </div>
       </div>

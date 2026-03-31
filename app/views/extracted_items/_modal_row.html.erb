@@ -1,0 +1,47 @@
+<%# locals: item, project, meeting %>
+<% grid = "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,7rem)_minmax(0,9rem)_minmax(0,7rem)] sm:items-end" %>
+<% field = "w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-2 py-1.5 text-sm text-[var(--mi-text)] focus:border-[var(--mi-teal)]/50 focus:outline-none focus:ring-1 focus:ring-[var(--mi-teal)]/40" %>
+<% owner_choices = meeting.speaker_names_for_owner_picklist %>
+<% if item.owner.present? && owner_choices.exclude?(item.owner) %>
+  <% owner_choices = (owner_choices + [item.owner]).uniq.sort %>
+<% end %>
+<tr id="<%= dom_id(item) %>" class="border-b border-[var(--mi-border)]/50 last:border-b-0">
+  <td colspan="4" class="p-2 align-top">
+    <%= form_with model: [ project, meeting, item ] do |f| %>
+      <%= hidden_field_tag :ui_context, "modal" %>
+      <div class="<%= grid %>">
+        <div>
+          <%= f.text_area :description,
+                rows: 2,
+                class: field,
+                aria: { label: "Description" } %>
+        </div>
+        <div>
+          <% if owner_choices.any? %>
+            <%= f.select :owner,
+                  options_for_select([["—", ""]] + owner_choices.map { |n| [n, n] }, item.owner.presence),
+                  {},
+                  class: field,
+                  aria: { label: "Assigned" } %>
+          <% else %>
+            <%= f.text_field :owner,
+                  class: field,
+                  autocomplete: "name",
+                  placeholder: "Name",
+                  aria: { label: "Assigned" } %>
+          <% end %>
+        </div>
+        <div>
+          <%= f.date_field :due_date, class: field, aria: { label: "Due date" } %>
+        </div>
+        <div>
+          <%= f.select :status,
+                ExtractedItem.statuses.keys.map { |k| [k.to_s.humanize, k] },
+                {},
+                class: field,
+                aria: { label: "Status" } %>
+        </div>
+      </div>
+    <% end %>
+  </td>
+</tr>

@@ -24,6 +24,7 @@ RSpec.describe ExportService do
       lines = csv.lines.map(&:chomp)
       expect(lines.first).to include("Type")
       expect(lines.first).to include("Description")
+      expect(lines.first).to include("Assigned")
       expect(csv).to include("Ship MVP")
       expect(csv).to include("Write report")
       expect(csv).to include("action_item")

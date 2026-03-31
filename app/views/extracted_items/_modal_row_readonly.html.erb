@@ -1,0 +1,28 @@
+<%# locals: item, project, meeting %>
+<% status_class =
+     case item.status
+     when "open"
+       "border-[var(--mi-teal)]/30 bg-[var(--mi-teal)]/[0.12] text-[var(--mi-teal)]"
+     when "completed"
+       "border-[var(--mi-green)]/30 bg-[var(--mi-green)]/[0.12] text-[var(--mi-green)]"
+     when "dismissed"
+       "border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.1] text-[var(--mi-red)]"
+     else
+       "border-[var(--mi-border)] bg-[var(--mi-bg)]/50 text-[var(--mi-text-secondary)]"
+     end %>
+<tr id="<%= dom_id(item, :modal_read) %>" class="border-b border-[var(--mi-border)]/50 last:border-b-0">
+  <td class="max-w-[min(360px,40vw)] p-2 align-top text-[var(--mi-text)]">
+    <p class="line-clamp-6 whitespace-pre-wrap text-sm leading-snug"><%= item.description %></p>
+  </td>
+  <td class="p-2 align-top text-sm text-[var(--mi-text)]/90">
+    <%= item.owner.presence || "—" %>
+  </td>
+  <td class="p-2 align-top text-sm text-[var(--mi-text)]/90">
+    <%= item.due_date ? item.due_date.to_fs(:long) : "—" %>
+  </td>
+  <td class="p-2 align-top">
+    <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-mono-mi uppercase tracking-wide <%= status_class %>">
+      <%= item.status.to_s.humanize %>
+    </span>
+  </td>
+</tr>

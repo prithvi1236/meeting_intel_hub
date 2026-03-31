@@ -11,11 +11,27 @@ class ExtractedItemsController < ApplicationController
     if @item.update(item_params)
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            ActionView::RecordIdentifier.dom_id(@item),
-            partial: "extracted_items/item",
-            locals: { item: @item, project: @project, meeting: @meeting }
-          )
+          partial =
+            if params[:ui_context] == "modal"
+              "extracted_items/modal_row"
+            else
+              "extracted_items/item"
+            end
+          streams = [
+            turbo_stream.replace(
+              ActionView::RecordIdentifier.dom_id(@item),
+              partial: partial,
+              locals: { item: @item, project: @project, meeting: @meeting }
+            )
+          ]
+          if params[:ui_context] == "modal"
+            streams << turbo_stream.replace(
+              ActionView::RecordIdentifier.dom_id(@item, :modal_read),
+              partial: "extracted_items/modal_row_readonly",
+              locals: { item: @item, project: @project, meeting: @meeting }
+            )
+          end
+          render turbo_stream: streams
         end
         format.html { redirect_to project_path(@project), status: :see_other }
       end

@@ -1,0 +1,14 @@
+<% head_grid = "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,7rem)_minmax(0,9rem)_minmax(0,7rem)] sm:items-end" %>
+<% thl = "block text-left text-[10px] font-mono-mi uppercase tracking-wider text-[var(--mi-text-secondary)]" %>
+<thead class="sticky top-0 z-[1] bg-[var(--mi-bg)]/80 backdrop-blur">
+  <tr class="border-b border-[var(--mi-border)]/70">
+    <th colspan="4" class="p-2 pb-1">
+      <div class="<%= head_grid %>">
+        <span class="<%= thl %>">Description</span>
+        <span class="<%= thl %>">Assigned</span>
+        <span class="<%= thl %>">Due</span>
+        <span class="<%= thl %>">Status</span>
+      </div>
+    </th>
+  </tr>
+</thead>
