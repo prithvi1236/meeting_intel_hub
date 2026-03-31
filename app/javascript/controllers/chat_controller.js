@@ -74,7 +74,8 @@ export default class extends Controller {
   handleKeydown(event) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
-      this.element.querySelector("form")?.requestSubmit()
+      // Submit the composer form (not the clear-chat button form).
+      event.target.closest("form")?.requestSubmit()
     }
   }
 
