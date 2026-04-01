@@ -29,8 +29,6 @@ gem "prawn"
 gem "prawn-table"
 gem "faraday"
 gem "faraday-retry"
-gem "redcarpet"
-gem "kredis"
 gem "rack-attack"
 gem "csv"
 

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class MeetingImportsController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
 
   def create
@@ -47,10 +49,6 @@ class MeetingImportsController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
-
     def import_group_param
       params[:group].presence_in(%w[title day week month]) || "title"
     end

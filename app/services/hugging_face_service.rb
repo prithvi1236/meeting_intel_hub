@@ -12,9 +12,9 @@ class HuggingFaceService
     def extract_items(transcript_text)
       prompt = Prompts::EXTRACT_ITEMS.sub("{{transcript}}", transcript_text.to_s.truncate(100_000))
       text = generate_text(prompt, max_tokens: 2048)
-      normalize_extracted_items(JSON.parse(extract_json_object(text)))
-    rescue Error, JSON::ParserError
-      heuristic_extract_items(transcript_text.to_s)
+      ExtractedItems.normalize_extracted_items(JSON.parse(ExtractedItems.extract_json_object(text)))
+    rescue Error, JSON::ParserError, ExtractedItems::Error
+      ExtractedItems.heuristic_extract_items(transcript_text.to_s)
     end
 
     def analyse_sentiment_window(window_text)
@@ -40,22 +40,6 @@ class HuggingFaceService
         "dominant_emotion" => dominant_emotion(scores),
         "segment_count" => text.lines.count
       }
-    end
-
-    # Yields token-sized slices for ActionCable; returns { text:, citations: }.
-    def chat_with_context(user_messages:, context_chunks:)
-      context = context_chunks.map do |c|
-        "- [chunk_id=#{c[:chunk_id]}] (#{c[:meeting_title]} @ #{c[:start_time]}s): #{c[:content]}"
-      end.join("\n")
-      system = Prompts::CHAT_SYSTEM.sub("{{context}}", context.truncate(80_000))
-      user_block = user_messages.map { |m| "#{m[:role]}: #{m[:content]}" }.join("\n\n")
-      full_text = generate_text(user_block, system_instruction: system, max_tokens: 4096)
-
-      if block_given?
-        visible = ChatCitationFormatter.strip_machine_suffix(full_text)
-        visible.scan(/.{1,32}/m) { |slice| yield slice }
-      end
-      { text: full_text, citations: ChatCitationFormatter.citations_from_text(full_text) }
     end
 
     private
@@ -142,105 +126,6 @@ class HuggingFaceService
         '{"decisions":[],"action_items":[]}'
       end
 
-      def heuristic_extract_items(transcript_text)
-        lines = transcript_text.to_s.lines.map(&:strip).reject(&:blank?)
-        action_lines = lines.select { |line| action_line?(line) }.first(8)
-        decision_lines = lines.select { |line| decision_line?(line) }.first(8)
-
-        decisions = decision_lines.map do |line|
-          {
-            "description" => concise_description(line),
-            "confidence" => 0.35,
-            "source_quote" => line.truncate(240),
-            "source_timestamp" => nil
-          }
-        end
-
-        action_items = action_lines.map do |line|
-          {
-            "description" => concise_description(line),
-            "owner" => nil,
-            "due_date" => nil,
-            "confidence" => 0.4,
-            "source_quote" => line.truncate(240),
-            "source_timestamp" => nil
-          }
-        end
-
-        {
-          "decisions" => decisions,
-          "action_items" => action_items
-        }
-      end
-
-      def action_line?(line)
-        down = line.downcase
-        down.include?("action") ||
-          down.include?("next step") ||
-          down.include?("follow up") ||
-          down.include?("todo") ||
-          down.include?("will ") ||
-          down.include?("need to")
-      end
-
-      def decision_line?(line)
-        down = line.downcase
-        down.include?("decided") ||
-          down.include?("decision") ||
-          down.include?("agreed") ||
-          down.include?("we should") ||
-          down.include?("we will")
-      end
-
-      def normalize_line(line)
-        line.to_s.sub(/\A[^:]+:\s*/, "").strip
-      end
-
-      def concise_description(text, max_words: 20)
-        normalized = normalize_line(text)
-          .gsub(/\s+/, " ")
-          .gsub(/^\d{1,2}:\d{2}(?::\d{2})?\s*/, "")
-          .strip
-        first_sentence = normalized.split(/(?<=[.!?])\s+/).first.to_s
-        words = first_sentence.split
-        concise = words.first(max_words).join(" ").strip
-        concise = "#{concise}." if concise.present? && concise !~ /[.!?]\z/
-        concise.presence || "No clear item captured."
-      end
-
-      def normalize_extracted_items(data)
-        payload = data.is_a?(Hash) ? data.deep_dup : {}
-        payload["decisions"] = Array(payload["decisions"]).map do |decision|
-          row = decision.is_a?(Hash) ? decision.deep_dup : {}
-          row["description"] = concise_description(row["description"])
-          row
-        end
-        payload["action_items"] = Array(payload["action_items"]).map do |item|
-          row = item.is_a?(Hash) ? item.deep_dup : {}
-          row["description"] = concise_description(row["description"])
-          row
-        end
-        payload
-      end
-
-      def extract_json_object(text)
-        t = text.to_s.strip
-        if (m = t.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/m))
-          return m[1]
-        end
-
-        idx = t.index("{")
-        raise Error, "No JSON in model output" unless idx
-
-        depth = 0
-        t[idx..].each_char.with_index(idx) do |ch, i|
-          depth += 1 if ch == "{"
-          depth -= 1 if ch == "}"
-          return t[idx..i] if depth.zero?
-        end
-        t[idx..]
-      end
-
       def hf_api_token
         ENV["HUGGINGFACE_API_TOKEN"].to_s
       end
@@ -314,12 +199,6 @@ class HuggingFaceService
           "dominant_emotion" => "neutral",
           "segment_count" => text.lines.count
         }
-      end
-
-      def router_client
-        @router_client ||= Faraday.new(url: "https://router.huggingface.co") do |f|
-          f.adapter Faraday.default_adapter
-        end
       end
 
       def inference_client

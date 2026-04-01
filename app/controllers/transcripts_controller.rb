@@ -1,4 +1,6 @@
 class TranscriptsController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
   before_action :set_meeting
 
@@ -31,10 +33,6 @@ class TranscriptsController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
-
     def set_meeting
       @meeting = @project.meetings.find(params[:meeting_id])
     end

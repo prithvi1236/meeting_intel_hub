@@ -1,4 +1,6 @@
 class ExtractedItemsController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
   before_action :set_meeting
   before_action :set_item, only: %i[update destroy]
@@ -49,10 +51,6 @@ class ExtractedItemsController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
-
     def set_meeting
       @meeting = @project.meetings.find(params[:meeting_id])
     end

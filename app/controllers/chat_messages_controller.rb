@@ -1,4 +1,6 @@
 class ChatMessagesController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
   before_action :set_chat_session
 
@@ -25,10 +27,6 @@ class ChatMessagesController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
-
     def set_chat_session
       @chat_session = if params[:meeting_id]
         meeting = @project.meetings.find(params[:meeting_id])

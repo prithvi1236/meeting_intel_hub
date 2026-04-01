@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class TranscriptPreviewsController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
 
   def create
@@ -19,7 +21,4 @@ class TranscriptPreviewsController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
 end

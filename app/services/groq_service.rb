@@ -14,12 +14,12 @@ class GroqService
         max_tokens: 2048,
         temperature: 0.1
       ) { |delta| block&.call(delta) }
-      normalized = HuggingFaceService.send(:normalize_extracted_items, JSON.parse(extract_json_object(text)))
+      normalized = ExtractedItems.normalize_extracted_items(JSON.parse(ExtractedItems.extract_json_object(text)))
       with_backfill = backfill_missing_action_items(normalized, transcript_text.to_s)
       Rails.logger.info("[GroqService] extraction decisions=#{Array(with_backfill['decisions']).size} action_items=#{Array(with_backfill['action_items']).size}")
       with_backfill
-    rescue JSON::ParserError, Error
-      fallback = HuggingFaceService.send(:heuristic_extract_items, transcript_text.to_s)
+    rescue JSON::ParserError, Error, ExtractedItems::Error
+      fallback = ExtractedItems.heuristic_extract_items(transcript_text.to_s)
       Rails.logger.warn("[GroqService] fallback heuristic extraction used")
       fallback
     end
@@ -146,24 +146,6 @@ class GroqService
         raise Error, "Groq response parse failed: #{e.message}"
       end
 
-      def extract_json_object(text)
-        t = text.to_s.strip
-        if (m = t.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/m))
-          return m[1]
-        end
-
-        idx = t.index("{")
-        raise Error, "No JSON in model output" unless idx
-
-        depth = 0
-        t[idx..].each_char.with_index(idx) do |ch, i|
-          depth += 1 if ch == "{"
-          depth -= 1 if ch == "}"
-          return t[idx..i] if depth.zero?
-        end
-        t[idx..]
-      end
-
       def groq_api_key
         ENV["GROQ_API_KEY"].to_s
       end
@@ -174,7 +156,7 @@ class GroqService
         payload["action_items"] ||= []
         return payload if payload["action_items"].present?
 
-        heuristics = HuggingFaceService.send(:heuristic_extract_items, transcript_text)
+        heuristics = ExtractedItems.heuristic_extract_items(transcript_text)
         heuristic_actions = Array(heuristics["action_items"])
         payload["action_items"] = heuristic_actions if heuristic_actions.present?
         payload

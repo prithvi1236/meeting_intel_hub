@@ -1,4 +1,6 @@
 class MeetingsController < ApplicationController
+  include ProjectScoped
+
   before_action :set_project
   before_action :set_meeting, only: %i[show edit update destroy sentiment reprocess]
 
@@ -34,21 +36,8 @@ class MeetingsController < ApplicationController
       end
     end
 
-    transcript_id = nil
-    ActiveRecord::Base.transaction do
-      @meeting.save!
-      if uploaded.present?
-        fmt = File.extname(uploaded.original_filename).delete(".").downcase
-        tr = Transcript.create!(
-          meeting: @meeting,
-          file_name: uploaded.original_filename,
-          file_format: fmt
-        )
-        tr.file.attach(uploaded)
-        transcript_id = tr.id
-        @meeting.update!(status: :processing, processing_error: nil)
-      end
-    end
+    result = Meetings::CreateWithTranscript.call(meeting: @meeting, uploaded: uploaded)
+    transcript_id = result.transcript_id
     TranscriptProcessingJob.perform_later(transcript_id) if transcript_id
     redirect_to project_path(@project), notice: "Meeting created.", status: :see_other
   rescue ActiveRecord::RecordInvalid
@@ -90,10 +79,6 @@ class MeetingsController < ApplicationController
   end
 
   private
-    def set_project
-      @project = current_user.projects.find(params[:project_id])
-    end
-
     def set_meeting
       @meeting = @project.meetings.find(params[:id])
     end
