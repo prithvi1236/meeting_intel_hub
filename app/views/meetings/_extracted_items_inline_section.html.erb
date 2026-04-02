@@ -1,0 +1,13 @@
+<%# locals: (title:, items:, meeting:, empty_message:) %>
+<div>
+  <p class="mb-2 text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= title %></p>
+  <% if items.any? %>
+    <div class="space-y-2">
+      <% items.each do |item| %>
+        <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-sm text-[var(--mi-text)]/70"><%= empty_message %></p>
+  <% end %>
+</div>

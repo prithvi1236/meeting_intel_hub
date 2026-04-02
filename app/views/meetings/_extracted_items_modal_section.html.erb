@@ -1,0 +1,42 @@
+<%# locals: (title:, items:, meeting:, edit_btn:, aria_label:, empty_message:) %>
+<div data-controller="extracted-table-edit">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= title %></p>
+    <% if items.any? %>
+      <button
+        type="button"
+        class="<%= edit_btn %>"
+        data-extracted-table-edit-target="toggleButton"
+        data-action="click->extracted-table-edit#toggle"
+        aria-pressed="false"
+        aria-label="<%= aria_label %>"
+      >
+        Edit
+      </button>
+    <% end %>
+  </div>
+  <% if items.any? %>
+    <div data-extracted-table-edit-target="view" class="overflow-x-auto">
+      <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+        <%= render "extracted_items/modal_table_head_readonly" %>
+        <tbody>
+          <% items.each do |item| %>
+            <%= render "extracted_items/modal_row_readonly", item: item, project: meeting.project, meeting: meeting %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div data-extracted-table-edit-target="edit" class="hidden overflow-x-auto">
+      <table class="min-w-[640px] w-full border-collapse text-left text-sm">
+        <%= render "extracted_items/modal_table_head" %>
+        <tbody>
+          <% items.each do |item| %>
+            <%= render "extracted_items/modal_row", item: item, project: meeting.project, meeting: meeting %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-sm text-[var(--mi-text)]/70"><%= empty_message %></p>
+  <% end %>
+</div>

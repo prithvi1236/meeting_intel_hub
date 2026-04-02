@@ -19,116 +19,33 @@
     <% actions = meeting.extracted_items.action_items.order(:position, :created_at) %>
     <% if modal %>
       <div class="flex flex-col gap-6">
-        <div data-controller="extracted-table-edit">
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Decisions</p>
-            <% if decisions.any? %>
-              <button
-                type="button"
-                class="<%= edit_btn %>"
-                data-extracted-table-edit-target="toggleButton"
-                data-action="click->extracted-table-edit#toggle"
-                aria-pressed="false"
-                aria-label="Toggle editing decisions"
-              >
-                Edit
-              </button>
-            <% end %>
-          </div>
-          <% if decisions.any? %>
-            <div data-extracted-table-edit-target="view" class="overflow-x-auto">
-              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
-                <%= render "extracted_items/modal_table_head_readonly" %>
-                <tbody>
-                  <% decisions.each do |item| %>
-                    <%= render "extracted_items/modal_row_readonly", item: item, project: meeting.project, meeting: meeting %>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-            <div data-extracted-table-edit-target="edit" class="hidden overflow-x-auto">
-              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
-                <%= render "extracted_items/modal_table_head" %>
-                <tbody>
-                  <% decisions.each do |item| %>
-                    <%= render "extracted_items/modal_row", item: item, project: meeting.project, meeting: meeting %>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
-            <p class="text-sm text-[var(--mi-text)]/70">No decisions extracted.</p>
-          <% end %>
-        </div>
-
-        <div data-controller="extracted-table-edit">
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Action items</p>
-            <% if actions.any? %>
-              <button
-                type="button"
-                class="<%= edit_btn %>"
-                data-extracted-table-edit-target="toggleButton"
-                data-action="click->extracted-table-edit#toggle"
-                aria-pressed="false"
-                aria-label="Toggle editing action items"
-              >
-                Edit
-              </button>
-            <% end %>
-          </div>
-          <% if actions.any? %>
-            <div data-extracted-table-edit-target="view" class="overflow-x-auto">
-              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
-                <%= render "extracted_items/modal_table_head_readonly" %>
-                <tbody>
-                  <% actions.each do |item| %>
-                    <%= render "extracted_items/modal_row_readonly", item: item, project: meeting.project, meeting: meeting %>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-            <div data-extracted-table-edit-target="edit" class="hidden overflow-x-auto">
-              <table class="min-w-[640px] w-full border-collapse text-left text-sm">
-                <%= render "extracted_items/modal_table_head" %>
-                <tbody>
-                  <% actions.each do |item| %>
-                    <%= render "extracted_items/modal_row", item: item, project: meeting.project, meeting: meeting %>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
-            <p class="text-sm text-[var(--mi-text)]/70">No action items extracted.</p>
-          <% end %>
-        </div>
+        <%= render "meetings/extracted_items_modal_section",
+          title: "Decisions",
+          items: decisions,
+          meeting: meeting,
+          edit_btn: edit_btn,
+          aria_label: "Toggle editing decisions",
+          empty_message: "No decisions extracted." %>
+        <%= render "meetings/extracted_items_modal_section",
+          title: "Action items",
+          items: actions,
+          meeting: meeting,
+          edit_btn: edit_btn,
+          aria_label: "Toggle editing action items",
+          empty_message: "No action items extracted." %>
       </div>
     <% else %>
       <div class="space-y-4">
-        <div>
-          <p class="mb-2 text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Decisions</p>
-          <% if decisions.any? %>
-            <div class="space-y-2">
-              <% decisions.each do |item| %>
-                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
-              <% end %>
-            </div>
-          <% else %>
-            <p class="text-sm text-[var(--mi-text)]/70">No decisions extracted.</p>
-          <% end %>
-        </div>
-        <div>
-          <p class="mb-2 text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">Action items</p>
-          <% if actions.any? %>
-            <div class="space-y-2">
-              <% actions.each do |item| %>
-                <%= render "extracted_items/item", item: item, project: meeting.project, meeting: meeting %>
-              <% end %>
-            </div>
-          <% else %>
-            <p class="text-sm text-[var(--mi-text)]/70">No action items extracted.</p>
-          <% end %>
-        </div>
+        <%= render "meetings/extracted_items_inline_section",
+          title: "Decisions",
+          items: decisions,
+          meeting: meeting,
+          empty_message: "No decisions extracted." %>
+        <%= render "meetings/extracted_items_inline_section",
+          title: "Action items",
+          items: actions,
+          meeting: meeting,
+          empty_message: "No action items extracted." %>
       </div>
     <% end %>
   <% end %>

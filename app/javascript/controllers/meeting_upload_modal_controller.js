@@ -1,6 +1,27 @@
 import { Controller } from "@hotwired/stimulus"
 import { Turbo } from "@hotwired/turbo-rails"
 
+const ROW_GRID_CLASS =
+  "grid gap-3 rounded-[10px] border border-[var(--mi-border)] bg-[var(--mi-bg)]/40 p-3 text-sm sm:grid-cols-2"
+
+const DEFAULT_HIGHLIGHT_CLASSES = ["border-teal-500", "bg-teal-500/10"]
+
+const ALLOWED_EXTENSIONS = new Set(["txt", "vtt"])
+
+function escapeHtml(str) {
+  const d = document.createElement("div")
+  d.textContent = str
+  return d.innerHTML
+}
+
+function escapeAttr(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
 export default class extends Controller {
   static targets = ["dialog", "dropZone", "fileInput", "rows", "saveButton", "errorBox"]
   static values = {
@@ -14,10 +35,8 @@ export default class extends Controller {
 
   connect() {
     this.fileRows = []
-    this.highlightClassList = (this.highlightClasses.length && this.highlightClasses[0]?.split(" ")) || [
-      "border-teal-500",
-      "bg-teal-500/10",
-    ]
+    this.highlightClassList =
+      (this.highlightClasses.length && this.highlightClasses[0]?.split(" ")) || DEFAULT_HIGHLIGHT_CLASSES
     if (this.openValue) this.dialogTarget.showModal()
   }
 
@@ -63,11 +82,10 @@ export default class extends Controller {
   }
 
   async addFiles(fileList) {
-    const allowed = new Set(["txt", "vtt"])
     const files = Array.from(fileList || [])
     for (const file of files) {
       const ext = file.name.split(".").pop()?.toLowerCase()
-      if (!allowed.has(ext)) {
+      if (!ALLOWED_EXTENSIONS.has(ext)) {
         this.showClientError(`Unsupported type (${file.name}). Use .txt or .vtt only.`)
         continue
       }
@@ -76,29 +94,8 @@ export default class extends Controller {
   }
 
   async previewAndAppendRow(file) {
-    const fd = new FormData()
-    fd.append("transcript_file", file)
-    fd.append("authenticity_token", this.csrfToken)
-
-    let data
-    try {
-      const res = await fetch(this.previewUrlValue, {
-        method: "POST",
-        body: fd,
-        headers: {
-          Accept: "application/json",
-          "X-CSRF-Token": this.csrfToken,
-        },
-      })
-      data = await res.json()
-      if (!res.ok) {
-        this.showClientError(data.error || "Could not preview file.")
-        return
-      }
-    } catch {
-      this.showClientError("Network error while previewing.")
-      return
-    }
+    const data = await this.fetchPreviewJson(file)
+    if (!data) return
 
     const index = this.fileRows.length
     this.fileRows.push({
@@ -114,17 +111,50 @@ export default class extends Controller {
     this.toggleSave(true)
   }
 
+  async fetchPreviewJson(file) {
+    const fd = new FormData()
+    fd.append("transcript_file", file)
+    fd.append("authenticity_token", this.csrfToken)
+
+    try {
+      const res = await fetch(this.previewUrlValue, {
+        method: "POST",
+        body: fd,
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-Token": this.csrfToken,
+        },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        this.showClientError(data.error || "Could not preview file.")
+        return null
+      }
+      return data
+    } catch {
+      this.showClientError("Network error while previewing.")
+      return null
+    }
+  }
+
   appendRowElement(index) {
     const row = this.fileRows[index]
     const tr = document.createElement("div")
-    tr.className =
-      "grid gap-3 rounded-[10px] border border-[var(--mi-border)] bg-[var(--mi-bg)]/40 p-3 text-sm sm:grid-cols-2"
+    tr.className = ROW_GRID_CLASS
     tr.setAttribute("data-row-index", String(index))
-    tr.innerHTML = `
+    tr.innerHTML = this.rowInnerHtml(row, index)
+    this.rowsTarget.appendChild(tr)
+  }
+
+  rowInnerHtml(row, index) {
+    const dateNote = row.detectedDate
+      ? ` · Detected date: ${escapeHtml(row.detectedDate)}`
+      : ""
+    return `
       <div class="sm:col-span-2 flex flex-wrap items-start justify-between gap-2">
         <div class="min-w-0">
           <p class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]">File</p>
-          <p class="mt-0.5 truncate font-medium" title="${this.escapeHtml(row.fileName)}">${this.escapeHtml(row.fileName)}</p>
+          <p class="mt-0.5 truncate font-medium" title="${escapeHtml(row.fileName)}">${escapeHtml(row.fileName)}</p>
         </div>
         <button type="button" class="shrink-0 rounded-[6px] border border-[var(--mi-border)] px-2 py-1 text-xs" data-action="click->meeting-upload-modal#removeRow" data-row-index="${index}">
           Remove
@@ -132,22 +162,16 @@ export default class extends Controller {
       </div>
       <div>
         <label class="block text-xs text-[var(--mi-text-secondary)]">Meeting name</label>
-        <input type="text" name="title" value="${this.escapeAttr(row.suggestedTitle)}" class="mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-2 py-1.5 text-sm" data-field="title" />
+        <input type="text" name="title" value="${escapeAttr(row.suggestedTitle)}" class="mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-2 py-1.5 text-sm" data-field="title" />
       </div>
       <div>
         <label class="block text-xs text-[var(--mi-text-secondary)]">Meeting date</label>
-        <input type="date" name="meeting_date" value="${this.escapeAttr(row.detectedDate)}" class="mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-2 py-1.5 text-sm" data-field="date" />
+        <input type="date" name="meeting_date" value="${escapeAttr(row.detectedDate)}" class="mt-1 w-full rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-2 py-1.5 text-sm" data-field="date" />
       </div>
       <div class="sm:col-span-2 text-xs font-mono-mi text-[var(--mi-text-secondary)]">
-        ${Number(row.wordCount).toLocaleString()} words · ${Number(row.speakerCount)} speakers
-        ${
-          row.detectedDate
-            ? ` · Detected date: ${this.escapeHtml(row.detectedDate)}`
-            : ""
-        }
+        ${Number(row.wordCount).toLocaleString()} words · ${Number(row.speakerCount)} speakers${dateNote}
       </div>
     `
-    this.rowsTarget.appendChild(tr)
   }
 
   removeRow(event) {
@@ -168,24 +192,11 @@ export default class extends Controller {
     this.toggleSave(this.fileRows.length > 0)
   }
 
-  async   save(event) {
+  async save(event) {
     event?.preventDefault()
     if (this.fileRows.length === 0) return
 
-    const fd = new FormData()
-    fd.append("authenticity_token", this.csrfToken)
-    fd.append("group", this.groupValue)
-    fd.append("group_sort", this.groupSortValue)
-
-    this.fileRows.forEach((row, i) => {
-      const el = this.rowsTarget.querySelector(`[data-row-index="${i}"]`)
-      if (!el) return
-      const title = el.querySelector('[data-field="title"]')?.value ?? row.suggestedTitle
-      const date = el.querySelector('[data-field="date"]')?.value ?? ""
-      fd.append(`meeting_imports[${i}][title]`, title)
-      fd.append(`meeting_imports[${i}][meeting_date]`, date)
-      fd.append(`meeting_imports[${i}][file]`, row.file, row.file.name)
-    })
+    const fd = this.buildImportFormData()
 
     try {
       const res = await fetch(this.importUrlValue, {
@@ -204,6 +215,24 @@ export default class extends Controller {
     } catch {
       this.showClientError("Network error while saving.")
     }
+  }
+
+  buildImportFormData() {
+    const fd = new FormData()
+    fd.append("authenticity_token", this.csrfToken)
+    fd.append("group", this.groupValue)
+    fd.append("group_sort", this.groupSortValue)
+
+    this.fileRows.forEach((row, i) => {
+      const el = this.rowsTarget.querySelector(`[data-row-index="${i}"]`)
+      if (!el) return
+      const title = el.querySelector('[data-field="title"]')?.value ?? row.suggestedTitle
+      const date = el.querySelector('[data-field="date"]')?.value ?? ""
+      fd.append(`meeting_imports[${i}][title]`, title)
+      fd.append(`meeting_imports[${i}][meeting_date]`, date)
+      fd.append(`meeting_imports[${i}][file]`, row.file, row.file.name)
+    })
+    return fd
   }
 
   toggleSave(enabled) {
@@ -228,19 +257,5 @@ export default class extends Controller {
 
   get csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
-  }
-
-  escapeHtml(str) {
-    const d = document.createElement("div")
-    d.textContent = str
-    return d.innerHTML
-  }
-
-  escapeAttr(str) {
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
   }
 }
