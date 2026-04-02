@@ -75,7 +75,12 @@
                 <%= current_user.email %>
               </div>
             </div>
-            <%= button_to "Log out", session_path, method: :delete, class: "w-full text-left text-xs text-[var(--mi-text-secondary)] px-2 py-1 hover:text-[var(--mi-text)]" %>
+            <%= button_to session_path,
+                  method: :delete,
+                  class: "w-full inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-[var(--mi-red)] transition-colors hover:bg-[var(--mi-red)]/[0.08] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-red)]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" do %>
+              <%= render "shared/mi_icon", name: :logout, class: "h-4 w-4" %>
+              <span>Log out</span>
+            <% end %>
           <% end %>
         </div>
       </aside>
@@ -95,11 +100,16 @@
           </div>
           <button
             type="button"
-            class="rounded-lg border border-[var(--mi-border)] px-3 py-1.5 text-xs font-mono-mi"
+            class="rounded-lg border border-[var(--mi-border)] p-2 text-[var(--mi-text-secondary)] transition-colors hover:text-[var(--mi-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]"
             data-action="click->dark-mode#toggle"
             aria-label="Toggle dark mode"
           >
-            Theme
+            <span data-dark-mode-target="sunIcon">
+              <%= render "shared/mi_icon", name: :sun, class: "h-4 w-4" %>
+            </span>
+            <span data-dark-mode-target="moonIcon" class="hidden">
+              <%= render "shared/mi_icon", name: :moon, class: "h-4 w-4" %>
+            </span>
           </button>
         </header>
 

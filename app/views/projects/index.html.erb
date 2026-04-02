@@ -1,24 +1,44 @@
 <% content_for :title, "Projects" %>
 <% content_for :breadcrumb do %>
-  <%= link_to "Dashboard", root_path, class: "hover:underline" %> / Projects
+  <%= link_to "Dashboard", root_path, class: "hover:underline text-[var(--mi-text-secondary)]" %> / Projects
 <% end %>
 
 <div class="mb-6 flex items-center justify-between gap-4">
   <h1 class="text-2xl font-semibold">Projects</h1>
-  <%= link_to "New project", new_project_path, class: "rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+  <%= link_to "New project", new_project_path, class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f] transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
 </div>
 
 <% if @projects.empty? %>
-  <%= render "shared/empty_state", title: "No projects", body: "Create your first project to organize meetings.", cta_path: new_project_path, cta_label: "New project" %>
+  <%= render "shared/empty_state", 
+        title: "No projects", 
+        body: "Create your first project to organize meetings.", 
+        cta_path: new_project_path, 
+        cta_label: "New project" %>
 <% else %>
-  <ul class="space-y-2">
-    <% @projects.each do |p| %>
-      <li class="rounded-[12px] border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 flex justify-between gap-4">
-        <div>
-          <%= link_to p.name, p, class: "font-medium hover:underline" %>
-          <p class="text-xs text-[var(--mi-text-secondary)]"><%= pluralize(p.meetings_count, "meeting") %></p>
+  <ul class="space-y-3">
+    <% @projects.each do |project| %>
+      <li class="relative flex items-center justify-between gap-4 rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] px-4 py-3 transition-all hover:border-[var(--mi-teal)]/40 hover:bg-[var(--mi-teal)]/[0.06] hover:shadow-sm">
+        <%= link_to "",
+              project_path(project),
+              class: "absolute inset-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]",
+              aria: { label: "Open #{project.name}" } %>
+
+        <div class="relative z-10 flex flex-col">
+          <p class="font-medium"><%= project.name %></p>
+          <span class="text-xs text-[var(--mi-text-secondary)] mt-0.5">
+            <%= pluralize(project.meetings_count, "meeting") %>
+          </span>
         </div>
-        <%= link_to "Open", p, class: "text-sm text-[var(--mi-teal)] self-center" %>
+
+        <div class="relative z-10 flex items-center gap-2">
+          <%= button_to project_path(project),
+                method: :delete,
+                class: "#{mi_icon_btn_danger_class} opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100",
+                aria: { label: "Delete #{project.name}" },
+                form: { data: { turbo_confirm: "Delete this project and all its meetings?" } } do %>
+            <%= render "shared/mi_icon", name: :trash, class: "h-4 w-4" %>
+          <% end %>
+        </div>
       </li>
     <% end %>
   </ul>
