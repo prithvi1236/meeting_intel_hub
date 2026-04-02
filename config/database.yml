@@ -94,10 +94,12 @@ test:
 #
 # Production uses a single Postgres (e.g. Supabase): one URL for all roles.
 # On Render, use the pooler URL (e.g. :6543); direct :5432 often fails from the build network (IPv6).
+# Transaction-mode poolers (PgBouncer) cannot share prepared statements across connections.
 production:
   primary: &primary_production
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
+    prepared_statements: false
   cache:
     <<: *primary_production
     migrations_paths: db/cache_migrate
