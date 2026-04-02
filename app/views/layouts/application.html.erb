@@ -34,7 +34,6 @@
         --mi-surface: #1a1a1a;
         --mi-border: #2a2a2a;
         --mi-text: #f2f2f2;
-        /* Brighter than pure grey-500 for WCAG contrast on dark surfaces */
         --mi-text-secondary: #b8b8b8;
       }
       body { font-family: "DM Sans", system-ui, sans-serif; }
@@ -42,6 +41,12 @@
     </style>
   </head>
   <body class="h-full bg-[var(--mi-bg)] text-[var(--mi-text)] antialiased">
+    
+    <%# --- Define shared navigation classes for active/inactive states --- %>
+    <% nav_active_class = "bg-[var(--mi-teal)]/10 text-[var(--mi-teal)] font-medium" %>
+    <% nav_inactive_class = "text-[var(--mi-text-secondary)] hover:bg-[var(--mi-border)]/40 hover:text-[var(--mi-text)] font-normal" %>
+    <% nav_base_class = "block rounded-lg px-3 py-2 text-sm transition-colors" %>
+
     <div class="flex min-h-full">
       <aside
         class="hidden md:flex w-[240px] shrink-0 flex-col border-r border-[var(--mi-border)] bg-[var(--mi-surface)]"
@@ -54,10 +59,21 @@
         </div>
         <nav class="flex-1 overflow-y-auto p-3 space-y-1">
           <% if authenticated? %>
-            <%= link_to "Dashboard", root_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
-            <%= link_to "Projects", projects_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
-            <% current_user.projects.order(:name).limit(12).each do |p| %>
-              <%= link_to p.name, p, class: "block truncate rounded-lg px-3 py-1.5 text-xs text-[var(--mi-text-secondary)] hover:text-[var(--mi-text)]" %>
+            
+            <%= link_to "Dashboard", root_path, class: "#{nav_base_class} #{current_page?(root_path) ? nav_active_class : nav_inactive_class}" %>
+
+            <%= link_to "Projects", projects_path, class: "#{nav_base_class} #{current_page?(projects_path) || controller_name == 'projects' ? nav_active_class : nav_inactive_class}" %>
+
+            <%# Separator for recent projects %>
+            <div class="pt-4 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--mi-text-secondary)]">
+              Recent Projects
+            </div>
+
+            <%# Numbered Sidebar Projects Loop %>
+            <% current_user.projects.order(:name).limit(12).each_with_index do |p, index| %>
+              <%= link_to p, class: "block truncate rounded-lg px-3 py-1.5 text-xs text-[var(--mi-text-secondary)] hover:text-[var(--mi-text)]" do %>
+                <%= index + 1 %>. <%= p.name %>
+              <% end %>
             <% end %>
           <% else %>
             <%= link_to "Log in", new_session_path, class: "block rounded-lg px-3 py-2 text-sm hover:bg-[var(--mi-border)]/40" %>
@@ -66,7 +82,7 @@
         </nav>
         <div class="p-3 border-t border-[var(--mi-border)] space-y-2">
           <% if authenticated? %>
-            <%= link_to "New project", new_project_path, class: "block text-center rounded-lg bg-[var(--mi-teal)] text-[#0f0f0f] py-2 text-sm font-medium" %>
+            <%= link_to "New project", new_project_path, class: "block text-center rounded-lg bg-[var(--mi-teal)] text-[#0f0f0f] py-2 text-sm font-medium transition-opacity hover:opacity-90" %>
             <div class="flex items-center gap-2 px-2">
               <div class="h-8 w-8 rounded-full bg-[var(--mi-border)] flex items-center justify-center text-xs font-mono-mi" aria-hidden="true">
                 <%= current_user.name&.first&.upcase || "U" %>
@@ -143,8 +159,11 @@
       </div>
       <nav class="p-3 space-y-2">
         <% if authenticated? %>
-          <%= link_to "Dashboard", root_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
-          <%= link_to "Projects", projects_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
+          
+          <%= link_to "Dashboard", root_path, class: "#{nav_base_class} #{current_page?(root_path) ? nav_active_class : nav_inactive_class}", data: { action: "click->dark-mode#closeNav" } %>
+          
+          <%= link_to "Projects", projects_path, class: "#{nav_base_class} #{current_page?(projects_path) || controller_name == 'projects' ? nav_active_class : nav_inactive_class}", data: { action: "click->dark-mode#closeNav" } %>
+
         <% else %>
           <%= link_to "Log in", new_session_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
           <%= link_to "Sign up", signup_path, class: "block rounded-lg px-3 py-2 text-sm", data: { action: "click->dark-mode#closeNav" } %>
