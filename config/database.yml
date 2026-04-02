@@ -92,21 +92,18 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# Production uses a single Postgres (e.g. Supabase): one URL for all roles.
+# Optional: set DATABASE_DIRECT_URL to Supabase "direct" URL for db:migrate in CI/Render if the pooler breaks migrations.
 production:
   primary: &primary_production
     <<: *default
-    database: meeting_intel_production
-    username: meeting_intel
-    password: <%= ENV["MEETING_INTEL_DATABASE_PASSWORD"] %>
+    url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *primary_production
-    database: meeting_intel_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: meeting_intel_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: meeting_intel_production_cable
     migrations_paths: db/cable_migrate

@@ -1,0 +1,32 @@
+# Blueprint for Render: https://render.com/docs/blueprint-spec
+# Create a Supabase project, enable the vector extension, then set secrets in the Render dashboard.
+#
+# Required environment variables (Render → your web service → Environment):
+#   DATABASE_URL           — Supabase connection string (pooled URI recommended for the app)
+#   RAILS_MASTER_KEY       — contents of config/master.key (Rails decrypts credentials / secret_key_base)
+#   HUGGINGFACE_API_TOKEN  — if you use Hugging Face APIs
+#   GROQ_API_KEY           — if you use Groq
+#
+# Optional:
+#   DATABASE_DIRECT_URL    — Supabase non-pooler URL; render-build.sh uses it for db:migrate only
+#   SECRET_KEY_BASE        — only if you do not use credentials for secret_key_base (rare)
+
+services:
+  - type: web
+    name: meeting_intel
+    env: ruby
+    buildCommand: "./render-build.sh"
+    startCommand: "bundle exec rails server -b 0.0.0.0"
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_LEVEL
+        value: info
+      - key: RENDER
+        value: "true"
+      - key: SOLID_QUEUE_IN_PUMA
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: RAILS_MASTER_KEY
+        sync: false
