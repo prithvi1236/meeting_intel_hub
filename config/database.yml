@@ -93,7 +93,7 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 # Production uses a single Postgres (e.g. Supabase): one URL for all roles.
-# Optional: set DATABASE_DIRECT_URL to Supabase "direct" URL for db:migrate in CI/Render if the pooler breaks migrations.
+# On Render, use the pooler URL (e.g. :6543); direct :5432 often fails from the build network (IPv6).
 production:
   primary: &primary_production
     <<: *default

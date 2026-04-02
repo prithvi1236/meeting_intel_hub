@@ -8,8 +8,10 @@
 #   GROQ_API_KEY           — if you use Groq
 #
 # Optional:
-#   DATABASE_DIRECT_URL    — Supabase non-pooler URL; render-build.sh uses it for db:migrate only
 #   SECRET_KEY_BASE        — only if you do not use credentials for secret_key_base (rare)
+#
+# Do not use Supabase "direct" (db.*.supabase.co:5432) for Render builds — IPv6 is often unreachable.
+# Use the pooler DATABASE_URL; set pooler to Session mode in Supabase if migrations fail.
 
 services:
   - type: web
