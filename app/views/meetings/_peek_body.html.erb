@@ -1,22 +1,5 @@
 <%# locals: project, meeting %>
 <% transcript = meeting.transcript %>
-<% btn_export = "inline-flex items-center justify-center rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] px-3 py-1.5 text-xs font-mono-mi text-[var(--mi-text)] transition-colors hover:border-[var(--mi-teal)]/40 hover:bg-[var(--mi-teal)]/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
-<% icon_btn = "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] text-[var(--mi-text)] transition-colors hover:border-[var(--mi-teal)]/40 hover:bg-[var(--mi-teal)]/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
-<% icon_btn_edit = "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--mi-teal)]/45 bg-[var(--mi-teal)]/[0.1] text-[var(--mi-teal)] transition-colors hover:border-[var(--mi-teal)]/70 hover:bg-[var(--mi-teal)]/[0.18] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
-<% icon_btn_danger = "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--mi-red)]/45 bg-[var(--mi-red)]/[0.06] text-[var(--mi-red)] transition-colors hover:bg-[var(--mi-red)]/[0.14] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-red)]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
-<% status_pill =
-     case meeting.status
-     when "completed"
-       "border-[var(--mi-green)]/30 bg-[var(--mi-green)]/[0.12] text-[var(--mi-green)]"
-     when "failed"
-       "border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.1] text-[var(--mi-red)]"
-     when "processing", "pending"
-       "border-[var(--mi-teal)]/30 bg-[var(--mi-teal)]/[0.1] text-[var(--mi-teal)]"
-     else
-       "border-[var(--mi-border)] bg-[var(--mi-bg)]/50 text-[var(--mi-text-secondary)]"
-     end %>
-<% panel = "rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)] shadow-sm" %>
-<% panel_header = "border-b border-[var(--mi-border)] px-3 py-2.5 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85" %>
 <%= turbo_stream_from "meeting_#{meeting.id}" %>
 
 <div class="flex min-h-[calc(100vh-12rem)] flex-col gap-5 overflow-hidden">
@@ -26,7 +9,7 @@
         <p class="text-[11px] font-mono-mi uppercase tracking-[0.12em] text-[var(--mi-text)]/70">Meeting</p>
         <h2 class="mt-1 truncate text-xl font-semibold leading-tight tracking-tight text-[var(--mi-text)]"><%= meeting.title %></h2>
         <div class="mt-2 flex flex-wrap items-center gap-2">
-          <span class="rounded-md border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= status_pill %>">
+          <span class="rounded-md border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= mi_meeting_status_pill_class(meeting.status) %>">
             <%= meeting.status %>
           </span>
           <% if meeting.meeting_date.present? %>
@@ -41,14 +24,14 @@
       </div>
       <nav class="flex flex-wrap gap-2 sm:justify-end" aria-label="Meeting actions">
         <%= link_to edit_project_meeting_path(project, meeting),
-              class: icon_btn_edit,
+              class: mi_icon_btn_edit_class,
               aria: { label: "Edit meeting" },
               title: "Edit meeting" do %>
           <%= render "shared/mi_icon", name: :pencil, class: "h-5 w-5" %>
         <% end %>
         <%= button_to project_meeting_path(project, meeting),
               method: :delete,
-              class: icon_btn_danger,
+              class: mi_icon_btn_danger_class,
               title: "Delete meeting",
               form: {
                 class: "inline",
@@ -63,9 +46,9 @@
 
   <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-3 lg:gap-5">
     <section class="flex min-h-0 flex-col gap-4 lg:h-full">
-      <div class="flex min-h-0 flex-1 flex-col <%= panel %> overflow-hidden bg-[var(--mi-bg)]/35" aria-label="Transcript text">
-        <p class="<%= panel_header %> bg-[var(--mi-surface)]/60">Transcript</p>
-        <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
+      <div class="flex min-h-0 flex-1 flex-col <%= mi_panel_class %> overflow-hidden bg-[var(--mi-bg)]/35" aria-label="Transcript text">
+        <p class="<%= mi_panel_header_class %> bg-[var(--mi-surface)]/60">Transcript</p>
+        <div class="<%= mi_peek_scroll_body_class %>">
           <% if transcript&.raw_content.present? %>
             <pre class="whitespace-pre-wrap break-words font-mono-mi text-[13px] leading-[1.65] text-[var(--mi-text)]"><%= transcript.raw_content %></pre>
           <% elsif meeting.processing? %>
@@ -82,16 +65,16 @@
         </div>
       </div>
 
-      <section class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0" aria-label="Sentiment">
-        <p class="<%= panel_header %> shrink-0 bg-[var(--mi-surface)]/60">Sentiment</p>
-        <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
+      <section class="<%= mi_panel_class %> flex min-h-0 flex-1 flex-col overflow-hidden p-0" aria-label="Sentiment">
+        <p class="<%= mi_panel_header_class %> shrink-0 bg-[var(--mi-surface)]/60">Sentiment</p>
+        <div class="<%= mi_peek_scroll_body_class %>">
           <%= render "meetings/sentiment_dashboard", meeting: meeting %>
         </div>
       </section>
     </section>
 
     <section class="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-full" aria-label="Meeting chat">
-      <div class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+      <div class="<%= mi_panel_class %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
         <%= render "meetings/meeting_chat",
               project: project,
               meeting: meeting,
@@ -101,23 +84,23 @@
     </section>
 
     <section class="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-full" aria-label="Extracted items">
-      <div class="<%= panel %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-        <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--mi-border)] bg-[var(--mi-surface)]/60 px-3 py-2.5">
-          <p class="m-0 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85">
+      <div class="<%= mi_panel_class %> flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+        <div class="<%= mi_peek_extracted_toolbar_class %>">
+          <p class="<%= mi_panel_heading_muted_class %>">
             Extracted items
           </p>
           <nav class="flex flex-wrap items-center gap-2" aria-label="Export extracted items">
             <%= link_to "Export CSV",
                   export_items_api_v1_meeting_path(meeting, format: :csv),
-                  class: btn_export,
+                  class: mi_btn_export_class,
                   data: { turbo: false } %>
             <%= link_to "Export PDF",
                   export_items_api_v1_meeting_path(meeting, format: :pdf),
-                  class: btn_export,
+                  class: mi_btn_export_class,
                   data: { turbo: false } %>
           </nav>
         </div>
-        <div class="min-h-0 flex-1 overflow-y-auto p-3.5 [scrollbar-width:thin] [scrollbar-color:var(--mi-border)_transparent]">
+        <div class="<%= mi_peek_scroll_body_class %>">
           <%= render "meetings/extracted_items_inner", meeting: meeting, modal: true %>
         </div>
       </div>

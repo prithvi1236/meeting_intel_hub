@@ -15,8 +15,6 @@
 <% end %>
 
 <%= turbo_stream_from "chat_session_#{@chat_session.id}" %>
-<% cross_chat_icon_btn = "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] text-[var(--mi-text)] transition-colors hover:border-[var(--mi-red)]/35 hover:bg-[var(--mi-red)]/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-surface)]" %>
-<% cross_send_btn = "inline-flex h-[2.625rem] min-w-[2.75rem] shrink-0 items-center justify-center self-end rounded-[8px] bg-[var(--mi-teal)] px-3 text-[#0f0f0f] transition-colors hover:bg-[var(--mi-teal)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mi-teal)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--mi-bg)]" %>
 <% meeting = @chat_session.meeting %>
 <% clear_chat_path = meeting ? clear_messages_project_meeting_chat_session_path(@project, meeting, @chat_session) : clear_messages_project_chat_session_path(@project, @chat_session) %>
 <% chat_messages_path = meeting ? project_meeting_chat_session_chat_messages_path(@project, meeting, @chat_session) : project_chat_session_chat_messages_path(@project, @chat_session) %>
@@ -27,12 +25,12 @@
   data-chat-session-id-value="<%= @chat_session.id %>"
 >
   <div class="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--mi-border)] bg-[var(--mi-bg)]/35 px-4 py-2.5">
-    <p class="m-0 text-[11px] font-mono-mi font-medium uppercase tracking-[0.14em] text-[var(--mi-text)]/85">
+    <p class="<%= mi_panel_heading_muted_class %>">
       Chat
     </p>
     <%= button_to clear_chat_path,
           method: :delete,
-          class: cross_chat_icon_btn,
+          class: mi_chat_clear_toolbar_icon_btn_class,
           title: "Clear chat",
           aria: { label: "Clear chat" },
           form: {
@@ -57,7 +55,7 @@
             class: "min-w-0 flex-1 resize-none rounded-[8px] border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm",
             "aria-label": "Chat message" %>
       <%= f.button type: :submit,
-            class: cross_send_btn,
+            class: mi_chat_send_btn_class,
             title: "Send",
             aria: { label: "Send message" } do %>
         <%= render "shared/mi_icon", name: :send, class: "h-5 w-5" %>
