@@ -14,72 +14,36 @@
 <h1 class="mb-2 text-2xl font-semibold"><%= t("followup.email_book.title") %></h1>
 <p class="mb-8 text-sm text-[var(--mi-text-secondary)]"><%= t("followup.email_book.subtitle") %></p>
 
-<div class="mb-10 rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)]/50 p-5">
-  <h2 class="mb-4 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= t("followup.email_book.add") %></h2>
-  <%= form_with model: [ @project, @contact ], class: "grid gap-4 md:grid-cols-2" do |f| %>
-    <% if @contact.errors.any? && !@contact.persisted? %>
-      <div class="md:col-span-2 rounded-lg border border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.08] px-3 py-2 text-sm text-[var(--mi-red)]">
-        <%= @contact.errors.full_messages.to_sentence %>
-      </div>
-    <% end %>
-    <div>
-      <%= f.label :assignee_name_normalized, t("followup.email_book.assignee_key"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
-      <%= f.text_field :assignee_name_normalized, class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
-    </div>
-    <div>
-      <%= f.label :default_email, t("followup.email_book.email"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
-      <%= f.email_field :default_email, class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
-    </div>
-    <div class="md:col-span-2">
-      <%= f.label :aliases_text, t("followup.email_book.aliases"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
-      <%= f.text_field :aliases_text,
-            class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm",
-            placeholder: "e.g. A. Smith, alice" %>
-    </div>
-    <div class="md:col-span-2">
-      <%= f.submit t("followup.email_book.add"), class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
-    </div>
-  <% end %>
-</div>
-
 <h2 class="mb-4 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= t("followup.email_book.title") %></h2>
 <div class="space-y-4">
-  <% @contacts.each do |contact| %>
-    <% record = (contact.id == @contact.id && @contact.errors.any? && @contact.persisted?) ? @contact : contact %>
+  <% @speaker_contact_rows.each do |row| %>
+    <% record = row[:contact] %>
+    <% show_record = (record.id.present? && record.id == @contact.id && @contact.errors.any?) ? @contact : record %>
     <div class="rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)]/40 p-4">
-      <%= form_with model: [ @project, record ], method: :patch, class: "grid gap-4 md:grid-cols-2" do |f| %>
-        <% if record.errors.any? %>
+      <div class="mb-3 text-sm text-[var(--mi-text-secondary)]">
+        <span class="font-mono-mi uppercase text-xs tracking-wide"><%= t("followup.email_book.speaker") %></span>
+        <p class="mt-1 text-base text-[var(--mi-text)]"><%= row[:speaker_name] %></p>
+      </div>
+      <%= form_with model: [ @project, show_record ], method: show_record.persisted? ? :patch : :post, class: "grid gap-4 md:grid-cols-2" do |f| %>
+        <% if show_record.errors.any? %>
           <div class="md:col-span-2 rounded-lg border border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.08] px-3 py-2 text-sm text-[var(--mi-red)]">
-            <%= record.errors.full_messages.to_sentence %>
+            <%= show_record.errors.full_messages.to_sentence %>
           </div>
         <% end %>
-        <div>
-          <%= f.label :assignee_name_normalized, t("followup.email_book.assignee_key"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
-          <%= f.text_field :assignee_name_normalized, class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
-        </div>
         <div>
           <%= f.label :default_email, t("followup.email_book.email"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
           <%= f.email_field :default_email, class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
         </div>
-        <div class="md:col-span-2">
-          <%= f.label :aliases_text, t("followup.email_book.aliases"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
-          <%= f.text_field :aliases_text,
-                value: record.aliases_text.presence || record.aliases&.join(", "),
-                class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
-        </div>
+        <%= f.hidden_field :assignee_name_normalized, value: show_record.assignee_name_normalized %>
+        <%= f.hidden_field :aliases_text, value: show_record.aliases_text.presence || row[:speaker_name] %>
         <div class="md:col-span-2 flex flex-wrap gap-2">
           <%= f.submit t("followup.email_book.save"), class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
-          <%= button_to t("followup.email_book.remove"),
-                project_project_assignee_contact_path(@project, record),
-                method: :delete,
-                form: { class: "inline" },
-                class: "rounded-lg border border-[var(--mi-red)]/40 px-4 py-2 text-sm text-[var(--mi-red)]" %>
         </div>
       <% end %>
     </div>
   <% end %>
 </div>
 
-<% if @contacts.empty? %>
+<% if @speaker_contact_rows.empty? %>
   <p class="mt-6 text-sm text-[var(--mi-text-secondary)]"><%= t("followup.email_book.none_yet") %></p>
 <% end %>

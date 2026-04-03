@@ -13,6 +13,33 @@ RSpec.describe "Project assignee contacts", type: :request do
       get project_project_assignee_contacts_path(project)
       expect(response).to have_http_status(:ok)
     end
+
+    it "lists unique speakers across uploaded project meetings" do
+      meeting_one = create(:meeting, project: project)
+      meeting_two = create(:meeting, project: project)
+      create(
+        :transcript,
+        meeting: meeting_one,
+        parsed_segments: [
+          { "speaker" => "Alice", "text" => "First update." },
+          { "speaker" => "Bob", "text" => "Second update." }
+        ]
+      )
+      create(
+        :transcript,
+        meeting: meeting_two,
+        parsed_segments: [
+          { "speaker" => "Alice", "text" => "Another update." },
+          { "speaker" => "Carol", "text" => "Wrap up." }
+        ]
+      )
+
+      get project_project_assignee_contacts_path(project)
+
+      expect(response.body).to include("Alice")
+      expect(response.body).to include("Bob")
+      expect(response.body).to include("Carol")
+    end
   end
 
   describe "POST /projects/:project_id/project_assignee_contacts" do
