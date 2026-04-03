@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_02_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_03_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -84,6 +84,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_060000) do
     t.index ["transcript_chunk_id"], name: "index_extracted_items_on_transcript_chunk_id"
   end
 
+  create_table "followup_drafts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "ai_model_version"
+    t.string "assignee_email"
+    t.string "assignee_name", null: false
+    t.text "body", null: false
+    t.string "channel", default: "email", null: false
+    t.datetime "created_at", null: false
+    t.text "delivery_error"
+    t.string "email_resolution_status", default: "missing_email", null: false
+    t.uuid "extracted_item_id", null: false
+    t.uuid "meeting_id", null: false
+    t.datetime "scheduled_send_at"
+    t.string "sender_email"
+    t.datetime "sent_at"
+    t.string "status", default: "pending_review", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.index ["email_resolution_status"], name: "index_followup_drafts_on_email_resolution_status"
+    t.index ["extracted_item_id"], name: "index_followup_drafts_on_extracted_item_id", unique: true
+    t.index ["meeting_id", "assignee_name"], name: "index_followup_drafts_on_meeting_id_and_assignee_name"
+    t.index ["meeting_id", "status"], name: "index_followup_drafts_on_meeting_id_and_status"
+    t.index ["meeting_id"], name: "index_followup_drafts_on_meeting_id"
+    t.index ["status"], name: "index_followup_drafts_on_status"
+  end
+
+  create_table "followup_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "actor", null: false
+    t.datetime "created_at", null: false
+    t.string "event_type", null: false
+    t.uuid "followup_draft_id", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_type"], name: "index_followup_events_on_event_type"
+    t.index ["followup_draft_id", "created_at"], name: "index_followup_events_on_followup_draft_id_and_created_at"
+    t.index ["followup_draft_id"], name: "index_followup_events_on_followup_draft_id"
+  end
+
   create_table "meetings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "duration_seconds"
@@ -100,6 +137,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_060000) do
     t.index ["project_id", "meeting_date"], name: "index_meetings_on_project_id_and_meeting_date"
     t.index ["project_id"], name: "index_meetings_on_project_id"
     t.index ["status"], name: "index_meetings_on_status"
+  end
+
+  create_table "project_assignee_contacts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.jsonb "aliases", default: [], null: false
+    t.string "assignee_name_normalized", null: false
+    t.datetime "created_at", null: false
+    t.string "default_email", null: false
+    t.uuid "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignee_name_normalized"], name: "index_project_assignee_contacts_on_assignee_name_normalized"
+    t.index ["project_id", "assignee_name_normalized"], name: "idx_on_project_id_assignee_name_normalized_d813865b50", unique: true
+    t.index ["project_id"], name: "index_project_assignee_contacts_on_project_id"
   end
 
   create_table "projects", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -330,7 +379,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_060000) do
   add_foreign_key "chat_sessions", "projects"
   add_foreign_key "extracted_items", "meetings"
   add_foreign_key "extracted_items", "transcript_chunks"
+  add_foreign_key "followup_drafts", "extracted_items"
+  add_foreign_key "followup_drafts", "meetings"
+  add_foreign_key "followup_events", "followup_drafts"
   add_foreign_key "meetings", "projects"
+  add_foreign_key "project_assignee_contacts", "projects"
   add_foreign_key "projects", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

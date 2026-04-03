@@ -1,0 +1,70 @@
+<%# locals: (draft:, meeting: nil) %>
+<div id="<%= dom_id(draft) %>" class="rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)]/50 p-4 shadow-sm">
+  <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <div>
+      <p class="text-xs font-mono-mi uppercase tracking-wide text-[var(--mi-text-secondary)]"><%= draft.assignee_name %></p>
+      <% if meeting.nil? && draft.meeting %>
+        <p class="mt-1 text-xs text-[var(--mi-text-secondary)]">
+          <%= t("followup.review.grouped_from", title: draft.meeting.title) %>
+        </p>
+      <% end %>
+    </div>
+    <span class="rounded-full border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= followup_email_resolution_pill_classes(draft) %>">
+      <%= followup_email_resolution_label(draft) %>
+    </span>
+  </div>
+
+  <% if draft.sent? %>
+    <div class="space-y-2 text-sm">
+      <p class="rounded-lg border border-[var(--mi-teal)]/50 bg-[var(--mi-teal)]/[0.12] px-3 py-2 text-[var(--mi-text)]">
+        <%= t("followup.review.delivered_at", time: (draft.sent_at.present? ? l(draft.sent_at, format: :long) : "—")) %>
+      </p>
+      <%= render "followup_drafts/draft_email_preview", draft: draft %>
+    </div>
+  <% elsif draft.confirmed? %>
+    <div class="space-y-2 text-sm">
+      <p class="rounded-lg border border-[var(--mi-teal)]/35 bg-[var(--mi-teal)]/[0.08] px-3 py-2 text-[var(--mi-text)]">
+        <%= t("followup.review.queued_for_delivery") %>
+      </p>
+      <% if Rails.env.development? %>
+        <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.queued_worker_hint") %></p>
+      <% end %>
+      <%= render "followup_drafts/draft_email_preview", draft: draft %>
+    </div>
+  <% elsif draft.pending_review? || draft.failed? %>
+    <% if draft.failed? && draft.delivery_error.present? %>
+      <p class="mb-3 rounded-lg border border-[var(--mi-red)]/35 bg-[var(--mi-red)]/[0.08] px-3 py-2 text-sm text-[var(--mi-red)]">
+        <%= t("followup.review.delivery_failed_hint", error: draft.delivery_error) %>
+      </p>
+    <% end %>
+
+    <%= form_with model: draft, url: followup_draft_path(draft), method: :patch, class: "space-y-3" do |f| %>
+      <div>
+        <%= f.label :assignee_email, t("followup.review.assignee_email"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
+        <%= f.email_field :assignee_email,
+              required: true,
+              class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :subject, t("followup.review.subject"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
+        <%= f.text_field :subject,
+              required: true,
+              class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
+      </div>
+      <div>
+        <%= f.label :body, t("followup.review.body"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
+        <%= f.text_area :body,
+              rows: 6,
+              required: true,
+              class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm font-mono-mi" %>
+      </div>
+      <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.send_footer_hint") %></p>
+      <div class="pt-1">
+        <%= f.submit t("followup.review.send"),
+              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-[var(--mi-text-secondary)]"><%= t("followup.review.unexpected_status", status: draft.status) %></p>
+  <% end %>
+</div>

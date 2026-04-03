@@ -1,0 +1,15 @@
+<div style="font-family: system-ui, -apple-system, sans-serif; color: #1a1a1a; line-height: 1.5;">
+  <p style="margin: 0 0 1em;"><strong><%= @meeting.title %></strong><br>
+  <%= @meeting.meeting_date.present? ? l(@meeting.meeting_date, format: :long) : t("followup.mailers.not_applicable_date") %></p>
+
+  <p style="margin: 0 0 0.5em;"><strong><%= t("followup.mailers.action_item_label") %>:</strong> <%= @action_item.description %></p>
+  <% if @action_item.due_date.present? %>
+    <p style="margin: 0 0 1em;"><strong><%= t("followup.mailers.due_label") %>:</strong> <%= l(@action_item.due_date, format: :long) %></p>
+  <% end %>
+
+  <div style="margin: 1em 0; white-space: pre-wrap;"><%= @draft.body %></div>
+
+  <hr style="border: none; border-top: 1px solid #ccc; margin: 1.5em 0;">
+
+  <p style="margin: 0; font-size: 0.9em; color: #444;"><%= t("followup.mailers.footer", organiser: @organiser_name) %></p>
+</div>

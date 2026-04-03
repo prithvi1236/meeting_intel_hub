@@ -1,0 +1,68 @@
+<% content_for :title, @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+<% content_for :breadcrumb do %>
+  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
+  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
+  <%= link_to @project.name, @project, class: "hover:underline" %> /
+  <% if @meeting %>
+    <%= link_to @meeting.title, project_meeting_path(@project, @meeting), class: "hover:underline" %> /
+  <% end %>
+  <%= @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+<% end %>
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <% if @meeting %>
+    <%= link_to t("followup.review.back_meeting"), project_meeting_path(@project, @meeting),
+          class: "inline-flex rounded-lg border border-[var(--mi-border)] px-3 py-2 text-sm text-[var(--mi-text-secondary)] hover:border-[var(--mi-teal)]/40" %>
+    <div class="flex flex-wrap gap-2">
+      <%= button_to t("followup.review.confirm_all"),
+            confirm_all_project_meeting_followup_drafts_path(@project, @meeting),
+            method: :patch,
+            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+      <%= button_to t("followup.review.dismiss_all"),
+            dismiss_all_project_meeting_followup_drafts_path(@project, @meeting),
+            method: :patch,
+            form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm", default: "Dismiss all pending drafts?") } },
+            class: "rounded-lg border border-[var(--mi-border)] px-4 py-2 text-sm" %>
+    </div>
+  <% else %>
+    <%= link_to t("followup.review.back_project"), project_path(@project),
+          class: "inline-flex rounded-lg border border-[var(--mi-border)] px-3 py-2 text-sm text-[var(--mi-text-secondary)] hover:border-[var(--mi-teal)]/40" %>
+  <% end %>
+</div>
+
+<h1 class="mb-6 text-2xl font-semibold text-[var(--mi-text)]">
+  <%= @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+</h1>
+
+<% if @drafts.empty? && @recently_sent_drafts.blank? %>
+  <%= render "followup_drafts/empty_state" %>
+<% else %>
+  <% unless @drafts.empty? %>
+    <div class="space-y-10">
+      <% @drafts_by_assignee.each do |assignee, group| %>
+        <section>
+          <h2 class="mb-4 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= assignee %></h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <% group.each do |draft| %>
+              <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @recently_sent_drafts.present? %>
+    <section class="<%= @drafts.empty? ? "" : "mt-14" %> border-t border-[var(--mi-border)]/70 pt-10">
+      <h2 class="mb-2 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">
+        <%= t("followup.review.recently_sent_heading") %>
+      </h2>
+      <p class="mb-6 text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.recently_sent_hint") %></p>
+      <div class="grid gap-4 md:grid-cols-2">
+        <% @recently_sent_drafts.each do |draft| %>
+          <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+<% end %>

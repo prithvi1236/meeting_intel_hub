@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include FollowupDraftsHelper
+
   # Shared Tailwind fragments for meeting peek / panels (keeps views readable).
   MI_SURFACE_INTERACTIVE_BASE =
     "rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)] " \

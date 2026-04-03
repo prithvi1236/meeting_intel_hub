@@ -55,6 +55,20 @@ class GroqService
       { text: full_text, citations: ChatCitationFormatter.citations_from_text(full_text) }
     end
 
+    # Non-streaming completion for follow-up draft JSON (subject + body).
+    def followup_chat_completion(model:, messages:, max_tokens:, temperature: 0.25)
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      text = chat_completion(
+        model: model,
+        messages: messages,
+        max_tokens: max_tokens,
+        temperature: temperature
+      )
+      elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round
+      Rails.logger.debug { "[GroqService][followup] model=#{model} max_tokens=#{max_tokens} duration_ms=#{elapsed_ms}" }
+      text
+    end
+
     private
       # https://console.groq.com/docs/text-chat — stream: true yields chat.completion.chunk events.
       def chat_completion_stream(model:, messages:, max_tokens:, temperature:)

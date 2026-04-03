@@ -3,6 +3,7 @@ class Meeting < ApplicationRecord
   has_one :transcript, dependent: :destroy
   has_many :transcript_chunks, dependent: :destroy
   has_many :extracted_items, dependent: :destroy
+  has_many :followup_drafts, dependent: :destroy
   has_many :chat_sessions, dependent: :destroy
 
   enum :status, { pending: "pending", processing: "processing", completed: "completed", failed: "failed" }

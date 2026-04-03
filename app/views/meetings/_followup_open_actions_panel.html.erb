@@ -1,0 +1,65 @@
+<%# locals: (meeting:, project:) %>
+<%# Show whenever the meeting has finished processing so users can always find follow-ups; open-item count may be 0. %>
+<% return if meeting.processing? %>
+
+<% open_items = meeting.extracted_items.action_items.open.order(:position, :created_at) %>
+<% groups = open_items.group_by { |i| i.owner.presence || t("followup.unassigned_assignee") } %>
+
+<div id="meeting-followup-panel" class="mt-4 border-t border-[var(--mi-border)]/70 pt-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= t("followup.review.title_meeting") %></p>
+    <%= link_to t("followup.email_book.manage_link"), project_project_assignee_contacts_path(project), class: "text-xs font-medium text-[var(--mi-teal)] underline" %>
+  </div>
+  <div class="mt-2 flex flex-wrap items-center gap-3">
+    <%= render "followup_drafts/summary", meeting: meeting %>
+  </div>
+
+  <div class="mt-4 rounded-xl border border-[var(--mi-border)] bg-[var(--mi-bg)]/50 p-4">
+    <% if open_items.empty? %>
+      <p class="text-sm text-[var(--mi-text-secondary)]"><%= t("followup.panel.no_open_items") %></p>
+    <% else %>
+      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <%= button_to t("followup.panel.generate_all"),
+              project_meeting_meeting_followup_drafts_generate_path(project, meeting),
+              method: :post,
+              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f]" %>
+        <%= link_to t("followup.summary.review_link"), project_meeting_followup_drafts_path(project, meeting), class: "text-sm font-medium text-[var(--mi-teal)] underline" %>
+      </div>
+      <p class="mt-2 text-xs text-[var(--mi-text-secondary)]"><%= t("followup.panel.generate_queued_hint") %></p>
+
+      <details class="mt-4 rounded-lg border border-[var(--mi-border)] bg-[var(--mi-surface)]/40 px-3 py-2">
+        <summary class="cursor-pointer select-none text-sm font-medium text-[var(--mi-text)] [&::-webkit-details-marker]:hidden">
+          <span class="inline-flex items-center gap-2">
+            <%= render "shared/mi_icon", name: :mail, class: "h-4 w-4 text-[var(--mi-teal)]" %>
+            <%= t("followup.panel.per_assignee_heading") %>
+          </span>
+        </summary>
+        <div class="mt-3 space-y-3 border-t border-[var(--mi-border)]/60 pt-3">
+          <% groups.each do |label, items| %>
+            <% key = followup_assignee_normalized_key(items.first) %>
+            <div class="rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)]/30 px-3 py-2">
+              <p class="text-sm font-medium text-[var(--mi-text)]">
+                <%= label %>
+                <span class="ml-2 text-xs font-normal text-[var(--mi-text-secondary)]">
+                  <%= t("followup.panel.items_count", count: items.size) %>
+                </span>
+              </p>
+              <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-[var(--mi-text-secondary)]">
+                <% items.each do |item| %>
+                  <li><%= item.description %></li>
+                <% end %>
+              </ul>
+              <div class="mt-3">
+                <%= button_to t("followup.panel.generate_for_assignee"),
+                      project_meeting_meeting_followup_drafts_generate_path(project, meeting),
+                      method: :post,
+                      params: { assignee_normalized: key },
+                      class: "rounded-md border border-[var(--mi-border)] px-3 py-1.5 text-xs font-medium" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  </div>
+</div>

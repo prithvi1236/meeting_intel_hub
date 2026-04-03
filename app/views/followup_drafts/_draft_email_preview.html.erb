@@ -1,0 +1,7 @@
+<%# locals: (draft:) %>
+<p><span class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]"><%= t("followup.review.assignee_email") %></span><br><%= draft.assignee_email %></p>
+<p><span class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]"><%= t("followup.review.subject") %></span><br><%= draft.subject %></p>
+<div>
+  <span class="text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]"><%= t("followup.review.body") %></span>
+  <pre class="mt-1 whitespace-pre-wrap font-mono-mi text-[13px] leading-relaxed text-[var(--mi-text)]"><%= draft.body %></pre>
+</div>

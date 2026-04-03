@@ -1,6 +1,8 @@
 class Project < ApplicationRecord
   belongs_to :user
   has_many :meetings, dependent: :destroy
+  has_many :followup_drafts, through: :meetings
+  has_many :project_assignee_contacts, dependent: :destroy
   has_many :chat_sessions, dependent: :destroy
   has_many :speakers, dependent: :destroy
 

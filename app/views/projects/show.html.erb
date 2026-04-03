@@ -1,4 +1,5 @@
 <% content_for :title, @project.name %>
+<%= turbo_stream_from "project_#{@project.id}" %>
 <% content_for :breadcrumb do %>
   <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
   <%= link_to "Projects", projects_path, class: "hover:underline" %> /
@@ -67,6 +68,8 @@
             onchange: "this.form.requestSubmit()" %>
     </div>
   <% end %>
+
+  <%= render "projects/followup_panel", project: @project %>
 
   <%= render "projects/meeting_groups",
       project: @project,

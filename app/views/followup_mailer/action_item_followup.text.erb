@@ -1,0 +1,12 @@
+<%= @meeting.title %>
+<%= @meeting.meeting_date.present? ? l(@meeting.meeting_date, format: :long) : t("followup.mailers.not_applicable_date") %>
+
+<%= t("followup.mailers.action_item_label") %>: <%= @action_item.description %>
+<% if @action_item.due_date.present? %>
+<%= t("followup.mailers.due_label") %>: <%= l(@action_item.due_date, format: :long) %>
+<% end %>
+
+<%= @draft.body %>
+
+---
+<%= t("followup.mailers.footer", organiser: @organiser_name) %>

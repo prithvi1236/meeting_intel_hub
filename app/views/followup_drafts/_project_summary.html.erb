@@ -1,0 +1,14 @@
+<%= turbo_frame_tag "project_followup_drafts_summary" do %>
+  <% open_count = ExtractedItem.action_items.open.joins(:meeting).where(meetings: { project_id: project.id }).count %>
+  <% pending = project.followup_drafts.pending_review.count %>
+  <div class="text-sm text-[var(--mi-text-secondary)]">
+    <span><%= t("followup.summary.open_action_items_count", count: open_count) %></span>
+    <span class="mx-1 text-[var(--mi-text)]/40" aria-hidden="true">·</span>
+    <span><%= t("followup.summary.drafts_pending_count", count: pending) %></span>
+    <% if pending.positive? %>
+      <%= link_to t("followup.summary.review_project_link"), project_followup_drafts_path(project), class: "ml-2 underline font-medium text-[var(--mi-teal)]" %>
+    <% elsif open_count.positive? %>
+      <span class="ml-2 text-xs text-[var(--mi-text-secondary)]"><%= t("followup.summary.generate_drafts_hint") %></span>
+    <% end %>
+  </div>
+<% end %>

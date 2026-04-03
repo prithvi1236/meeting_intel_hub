@@ -1,6 +1,7 @@
 class ExtractedItem < ApplicationRecord
   belongs_to :meeting
   belongs_to :transcript_chunk, optional: true
+  has_one :followup_draft, dependent: :destroy
 
   enum :item_type, { decision: "decision", action_item: "action_item" }
   enum :status, { open: "open", completed: "completed", dismissed: "dismissed" }

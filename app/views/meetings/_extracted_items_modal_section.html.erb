@@ -1,4 +1,4 @@
-<%# locals: (title:, items:, meeting:, edit_btn:, aria_label:, empty_message:) %>
+<%# locals: (title:, items:, meeting:, edit_btn:, aria_label:, empty_message:, show_followup_panel: false) %>
 <div data-controller="extracted-table-edit">
   <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
     <p class="text-xs font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= title %></p>
@@ -38,5 +38,8 @@
     </div>
   <% else %>
     <p class="text-sm text-[var(--mi-text)]/70"><%= empty_message %></p>
+  <% end %>
+  <% if local_assigns[:show_followup_panel] %>
+    <%= render "meetings/followup_open_actions_panel", meeting: meeting, project: meeting.project %>
   <% end %>
 </div>
