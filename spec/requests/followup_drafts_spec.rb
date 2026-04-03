@@ -62,6 +62,32 @@ RSpec.describe "Follow-up drafts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Hi")
     end
+
+    it "fills missing assignee email from email book by assignee name" do
+      create(
+        :project_assignee_contact,
+        project: project,
+        assignee_name_normalized: "alice",
+        default_email: "alice@example.com"
+      )
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "Alice", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "Alice",
+        assignee_email: "",
+        email_resolution_status: "missing_email",
+        status: "pending_review"
+      )
+
+      get project_followup_drafts_path(project)
+
+      draft.reload
+      expect(draft.assignee_email).to eq("alice@example.com")
+      expect(draft.email_resolution_status).to eq("matched")
+      expect(response.body).to include("alice@example.com")
+    end
   end
 
   describe "PATCH .../followup_drafts/confirm_all" do
@@ -106,6 +132,58 @@ RSpec.describe "Follow-up drafts", type: :request do
 
       expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
       expect(flash[:alert]).to be_present
+    end
+  end
+
+  describe "PATCH /projects/:project_id/followup_drafts/confirm_all" do
+    it "confirms sendable pending drafts across all meetings and enqueues send" do
+      other_meeting = create(:meeting, project: project, status: "completed")
+      item_one = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      item_two = create(:extracted_item, meeting: other_meeting, item_type: "action_item", owner: "B", status: "open")
+      draft_one = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item_one,
+        assignee_name: "A",
+        assignee_email: "a@example.com",
+        subject: "One",
+        body: "Body one",
+        status: "pending_review"
+      )
+      draft_two = create(
+        :followup_draft,
+        meeting: other_meeting,
+        extracted_item: item_two,
+        assignee_name: "B",
+        assignee_email: "b@example.com",
+        subject: "Two",
+        body: "Body two",
+        status: "pending_review"
+      )
+
+      expect do
+        patch confirm_all_project_followup_drafts_path(project)
+      end.to have_enqueued_job(FollowupSendJob).exactly(2).times
+
+      expect(draft_one.reload).to be_confirmed
+      expect(draft_two.reload).to be_confirmed
+      expect(response).to redirect_to(project_followup_drafts_path(project))
+    end
+  end
+
+  describe "PATCH /projects/:project_id/followup_drafts/dismiss_all" do
+    it "dismisses all pending drafts in the project" do
+      other_meeting = create(:meeting, project: project, status: "completed")
+      item_one = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      item_two = create(:extracted_item, meeting: other_meeting, item_type: "action_item", owner: "B", status: "open")
+      draft_one = create(:followup_draft, meeting: meeting, extracted_item: item_one, assignee_name: "A", status: "pending_review")
+      draft_two = create(:followup_draft, meeting: other_meeting, extracted_item: item_two, assignee_name: "B", status: "pending_review")
+
+      patch dismiss_all_project_followup_drafts_path(project)
+
+      expect(draft_one.reload).to be_dismissed
+      expect(draft_two.reload).to be_dismissed
+      expect(response).to redirect_to(project_followup_drafts_path(project))
     end
   end
 

@@ -10,7 +10,12 @@ Rails.application.routes.draw do
 
   resources :projects do
     resources :project_assignee_contacts, only: %i[index create update destroy]
-    resources :followup_drafts, only: %i[index]
+    resources :followup_drafts, only: %i[index] do
+      collection do
+        patch :confirm_all
+        patch :dismiss_all
+      end
+    end
     post "followup_drafts/generate", to: "followup_drafts#generate_for_project", as: :project_followup_drafts_generate
 
     resources :transcript_previews, only: %i[create]

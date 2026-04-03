@@ -5,7 +5,7 @@ class FollowupDraftsController < ApplicationController
 
   before_action :set_project, only: %i[index generate_for_project generate_for_meeting confirm_all dismiss_all]
   before_action :set_meeting_when_nested, only: %i[index generate_for_meeting confirm_all dismiss_all]
-  before_action :require_meeting!, only: %i[generate_for_meeting confirm_all dismiss_all]
+  before_action :require_meeting!, only: %i[generate_for_meeting]
   before_action :set_followup_draft_for_shallow, only: %i[update]
 
   def index
@@ -16,6 +16,7 @@ class FollowupDraftsController < ApplicationController
       @drafts = drafts_scope_for_project(@project)
       @scope = :project
     end
+    hydrate_missing_assignee_emails!(@drafts)
     @recently_sent_drafts = recently_sent_drafts
     @drafts_by_assignee = @drafts.group_by(&:assignee_name)
   end
@@ -65,7 +66,7 @@ class FollowupDraftsController < ApplicationController
   end
 
   def confirm_all
-    pending = @meeting.followup_drafts.pending_review.to_a
+    pending = pending_review_drafts_for_bulk.to_a
     queued = 0
     pending.each do |draft|
       next unless draft.sendable?
@@ -77,22 +78,22 @@ class FollowupDraftsController < ApplicationController
     end
 
     if queued.zero? && pending.any?
-      redirect_back_or_to project_meeting_followup_drafts_path(@project, @meeting),
+      redirect_back_or_to followup_review_path,
         alert: t("followup.review.confirm_all_incomplete"),
         status: :see_other
     else
-      redirect_back_or_to project_meeting_followup_drafts_path(@project, @meeting),
+      redirect_back_or_to followup_review_path,
         notice: t("followup.review.confirm_all_queued", count: queued),
         status: :see_other
     end
   end
 
   def dismiss_all
-    @meeting.followup_drafts.pending_review.find_each do |draft|
+    pending_review_drafts_for_bulk.find_each do |draft|
       draft.update!(status: :dismissed)
       draft.log_event(:dismissed, actor: followup_actor)
     end
-    redirect_back_or_to project_meeting_followup_drafts_path(@project, @meeting),
+    redirect_back_or_to followup_review_path,
       notice: t("followup.review.dismiss_all_done"),
       status: :see_other
   end
@@ -175,9 +176,35 @@ class FollowupDraftsController < ApplicationController
       @meeting ? project_meeting_followup_drafts_path(@project, @meeting) : project_followup_drafts_path(@project)
     end
 
+    def pending_review_drafts_for_bulk
+      if @meeting
+        @meeting.followup_drafts.pending_review
+      else
+        FollowupDraft.joins(:meeting).where(meetings: { project_id: @project.id }).pending_review
+      end
+    end
+
     def enqueue_send_if_applicable(draft)
       return unless draft.email? && draft.assignee_email.present?
 
       FollowupSendJob.perform_later(draft.id)
+    end
+
+    # Keep old pending drafts aligned with the latest Email Book mappings.
+    def hydrate_missing_assignee_emails!(drafts)
+      drafts.each do |draft|
+        next unless draft.assignee_email.blank?
+        next unless draft.pending_review? || draft.failed?
+
+        resolution = Followup::AssigneeEmailResolver.call(
+          project: @project,
+          assignee_display_name: draft.assignee_name
+        )
+
+        attrs = { email_resolution_status: resolution.status.to_s }
+        attrs[:assignee_email] = resolution.email if resolution.email.present?
+        draft.update_columns(attrs.merge(updated_at: Time.current))
+        draft.assign_attributes(attrs)
+      end
     end
 end
