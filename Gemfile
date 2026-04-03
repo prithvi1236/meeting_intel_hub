@@ -75,3 +75,6 @@ group :development do
   gem "web-console"
   gem "bullet"
 end
+
+# Postmark HTTPS API delivery (avoids SMTP to smtp.postmarkapp.com, which can time out on some hosts)
+gem "postmark-rails", "~> 0.22"

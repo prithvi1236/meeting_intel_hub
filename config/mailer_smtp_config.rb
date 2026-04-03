@@ -1,38 +1,38 @@
 # frozen_string_literal: true
 
-# Builds Action Mailer SMTP settings. Loaded from config/application.rb (before environments).
+# Builds outbound mail settings. Loaded from config/application.rb (before environments).
 #
-# Postmark: set POSTMARK_API_TOKEN (Server API token from Postmark). Username and password are both the token.
-# Generic SMTP: set SMTP_ADDRESS, SMTP_USER_NAME, SMTP_PASSWORD, etc.
+# Postmark: set POSTMARK_API_TOKEN or POSTMARK_SERVER_API_TOKEN. We use the Postmark HTTPS API
+# (postmark-rails), not SMTP, so delivery works on hosts that block or time out to smtp.postmarkapp.com:587.
+#
+# Generic SMTP: set SMTP_ADDRESS, SMTP_USER_NAME, SMTP_PASSWORD, etc. (only when no Postmark token).
 module MailerSmtpConfig
   module_function
-
-  # Hash for config.action_mailer.smtp_settings, or nil if no outbound SMTP is configured.
-  def build_smtp_settings
-    token = postmark_api_token
-    return postmark_smtp_settings(token) if token
-
-    generic_smtp_settings
-  end
-
-  def smtp_configured?
-    build_smtp_settings.present?
-  end
 
   def postmark_api_token
     ENV["POSTMARK_API_TOKEN"].presence || ENV["POSTMARK_SERVER_API_TOKEN"].presence
   end
 
-  def postmark_smtp_settings(token)
-    {
-      address: "smtp.postmarkapp.com",
-      port: 587,
-      user_name: token,
-      password: token,
-      authentication: :plain,
-      enable_starttls_auto: true,
-      domain: ENV.fetch("SMTP_DOMAIN", "localhost")
-    }
+  def postmark_configured?
+    postmark_api_token.present?
+  end
+
+  # Hash for config.action_mailer.postmark_settings when using Postmark API delivery.
+  def build_postmark_settings
+    return nil unless postmark_configured?
+
+    { api_token: postmark_api_token }
+  end
+
+  # Hash for config.action_mailer.smtp_settings, or nil. Omits Postmark SMTP — use API instead.
+  def build_smtp_settings
+    return nil if postmark_configured?
+
+    generic_smtp_settings
+  end
+
+  def smtp_configured?
+    postmark_configured? || build_smtp_settings.present?
   end
 
   def generic_smtp_settings

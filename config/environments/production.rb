@@ -62,12 +62,18 @@ Rails.application.configure do
     host: ENV.fetch("MAILER_DEFAULT_HOST", "example.com")
   }
 
-  smtp_settings = MailerSmtpConfig.build_smtp_settings
-  if smtp_settings
+  raise_delivery_errors =
+    ActiveModel::Type::Boolean.new.cast(ENV.fetch("SMTP_RAISE_DELIVERY_ERRORS", "false"))
+
+  if MailerSmtpConfig.postmark_configured?
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.delivery_method = :postmark
+    config.action_mailer.postmark_settings = MailerSmtpConfig.build_postmark_settings
+    config.action_mailer.raise_delivery_errors = raise_delivery_errors
+  elsif (smtp_settings = MailerSmtpConfig.build_smtp_settings)
     config.action_mailer.perform_deliveries = true
     config.action_mailer.delivery_method = :smtp
-    config.action_mailer.raise_delivery_errors =
-      ActiveModel::Type::Boolean.new.cast(ENV.fetch("SMTP_RAISE_DELIVERY_ERRORS", "false"))
+    config.action_mailer.raise_delivery_errors = raise_delivery_errors
     config.action_mailer.smtp_settings = smtp_settings
   else
     config.action_mailer.perform_deliveries = false

@@ -37,10 +37,13 @@ Rails.application.configure do
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
-  # Postmark (POSTMARK_API_TOKEN), generic SMTP, or tmp/mail/. Follow-ups need a job worker (bin/dev / bin/jobs) unless DEV_INLINE_JOBS=1.
+  # Postmark API (POSTMARK_API_TOKEN), generic SMTP, or tmp/mail/. Follow-ups need a job worker (bin/dev / bin/jobs) unless DEV_INLINE_JOBS=1.
   config.action_mailer.perform_deliveries = true
-  smtp_settings = MailerSmtpConfig.build_smtp_settings
-  if smtp_settings
+  if MailerSmtpConfig.postmark_configured?
+    config.action_mailer.delivery_method = :postmark
+    config.action_mailer.postmark_settings = MailerSmtpConfig.build_postmark_settings
+    config.action_mailer.raise_delivery_errors = true
+  elsif (smtp_settings = MailerSmtpConfig.build_smtp_settings)
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.smtp_settings = smtp_settings

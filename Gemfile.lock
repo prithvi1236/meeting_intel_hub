@@ -232,6 +232,11 @@ GEM
     pg (1.6.3-arm64-darwin)
     pg (1.6.3-x86_64-linux)
     pg (1.6.3-x86_64-linux-musl)
+    postmark (1.25.1)
+      json
+    postmark-rails (0.22.1)
+      actionmailer (>= 3.0.0)
+      postmark (>= 1.21.3, < 2.0)
     pp (0.6.3)
       prettyprint
     prawn (2.5.0)
@@ -456,6 +461,7 @@ DEPENDENCIES
   neighbor
   pagy
   pg (~> 1.1)
+  postmark-rails (~> 0.22)
   prawn
   prawn-table
   propshaft

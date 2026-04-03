@@ -13,7 +13,7 @@ class MailDiagnostics
   def run
     line "=== Meeting Intel — mail:diag ==="
     smtp = MailerSmtpConfig.build_smtp_settings
-    line summarize_smtp_config(smtp)
+    line summarize_outbound_config(smtp)
     line
     line "--- Action Mailer (RAILS_ENV=#{Rails.env}) ---"
     line "delivery_method: #{ActionMailer::Base.delivery_method}"
@@ -41,17 +41,13 @@ class MailDiagnostics
       @out.puts(msg)
     end
 
-    def summarize_smtp_config(smtp)
-      if smtp
-        parts = [ "SMTP: #{smtp[:address]}:#{smtp[:port]} auth=#{smtp[:authentication]}" ]
-        if MailerSmtpConfig.postmark_api_token.present?
-          parts << "Postmark token: set"
-        elsif smtp[:address].to_s.include?("postmark")
-          parts << "Postmark host but no token in env"
-        end
-        parts.join(" — ")
+    def summarize_outbound_config(smtp)
+      if MailerSmtpConfig.postmark_configured?
+        "Postmark: HTTPS API (token set; not using smtp.postmarkapp.com)"
+      elsif smtp
+        "SMTP: #{smtp[:address]}:#{smtp[:port]} auth=#{smtp[:authentication]}"
       else
-        "SMTP: not configured (dev falls back to tmp/mail/)"
+        "Outbound: not configured (dev falls back to tmp/mail/)"
       end
     end
 
@@ -79,6 +75,10 @@ class MailDiagnostics
     end
 
     def smtp_auth_result(smtp)
+      if MailerSmtpConfig.postmark_configured?
+        return "Skipped (Postmark uses API; check Activity in Postmark dashboard)"
+      end
+
       unless smtp && smtp[:user_name].present? && smtp[:password].present?
         return "Skipped (no SMTP credentials)"
       end
