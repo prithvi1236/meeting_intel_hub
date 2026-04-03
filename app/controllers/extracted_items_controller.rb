@@ -38,7 +38,7 @@ class ExtractedItemsController < ApplicationController
         format.html { redirect_to project_path(@project), status: :see_other }
       end
     else
-      head :unprocessable_entity
+      head :unprocessable_content
     end
   end
 

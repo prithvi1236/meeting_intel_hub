@@ -38,7 +38,7 @@ RSpec.describe "Transcript previews", type: :request do
 
       post project_transcript_previews_path(project), params: { transcript_file: file }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["error"]).to match(/\.txt or \.vtt/i)
     end
   end

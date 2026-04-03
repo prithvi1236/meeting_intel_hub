@@ -8,7 +8,7 @@ class TranscriptPreviewsController < ApplicationController
   def create
     uploaded = params[:transcript_file]
     unless uploaded.respond_to?(:original_filename)
-      return render json: { error: "Choose a file." }, status: :unprocessable_entity
+      return render json: { error: "Choose a file." }, status: :unprocessable_content
     end
 
     result = TranscriptPreviewService.call(uploaded)
@@ -16,7 +16,7 @@ class TranscriptPreviewsController < ApplicationController
     if result[:ok]
       render json: result.except(:ok), status: :ok
     else
-      render json: { error: result[:error] }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: :unprocessable_content
     end
   end
 

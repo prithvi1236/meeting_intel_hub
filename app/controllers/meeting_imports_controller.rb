@@ -39,7 +39,7 @@ class MeetingImportsController < ApplicationController
             "meeting-import-errors",
             partial: "projects/meeting_import_errors",
             locals: { message: result.error }
-          ), status: :unprocessable_entity
+          ), status: :unprocessable_content
         end
         format.html do
           redirect_to project_path(@project), alert: result.error

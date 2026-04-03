@@ -32,7 +32,7 @@ class MeetingsController < ApplicationController
         @meeting.errors.add(:base, msg)
       end
       if @meeting.errors.any?
-        return render :new, status: :unprocessable_entity
+        return render :new, status: :unprocessable_content
       end
     end
 
@@ -41,14 +41,14 @@ class MeetingsController < ApplicationController
     TranscriptProcessingJob.perform_later(transcript_id) if transcript_id
     redirect_to project_path(@project), notice: "Meeting created.", status: :see_other
   rescue ActiveRecord::RecordInvalid
-    render :new, status: :unprocessable_entity
+    render :new, status: :unprocessable_content
   end
 
   def update
     if @meeting.update(meeting_params)
       redirect_to project_meeting_path(@project, @meeting), notice: "Meeting updated.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

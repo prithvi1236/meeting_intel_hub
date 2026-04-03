@@ -27,7 +27,7 @@ class ChatSessionsController < ApplicationController
       if @chat_session.save
         redirect_to project_chat_session_path(@project, @chat_session), status: :see_other
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
   end

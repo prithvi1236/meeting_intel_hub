@@ -7,7 +7,7 @@ class ChatMessagesController < ApplicationController
   def create
     content = params.fetch(:chat_message, {}).permit(:content)[:content].to_s.strip
     if content.blank?
-      return head :unprocessable_entity
+      return head :unprocessable_content
     end
 
     user_msg = @chat_session.chat_messages.create!(role: :user, content: content)

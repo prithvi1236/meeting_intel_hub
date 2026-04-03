@@ -47,7 +47,7 @@ RSpec.describe "Meetings", type: :request do
           }
       end.not_to change(Meeting, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to match(/WebVTT|Allowed types/i)
     end
 
