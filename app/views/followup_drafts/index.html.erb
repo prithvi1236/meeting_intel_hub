@@ -1,47 +1,75 @@
-<% content_for :title, @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+<% page_title = @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+<% content_for :title, page_title %>
+
 <% content_for :breadcrumb do %>
-  <%= link_to "Dashboard", root_path, class: "hover:underline" %> /
-  <%= link_to "Projects", projects_path, class: "hover:underline" %> /
-  <%= link_to @project.name, @project, class: "hover:underline" %> /
-  <% if @meeting %>
-    <%= link_to @meeting.title, project_meeting_path(@project, @meeting), class: "hover:underline" %> /
-  <% end %>
-  <%= @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
+  <nav aria-label="Breadcrumb" class="mb-6 flex text-sm text-[var(--mi-text-secondary)]">
+    <ol class="flex items-center gap-1.5 flex-wrap">
+      <li><%= link_to "Dashboard", root_path, class: "hover:text-[var(--mi-teal)] hover:underline transition-colors" %></li>
+      <li aria-hidden="true">/</li>
+      <li><%= link_to "Projects", projects_path, class: "hover:text-[var(--mi-teal)] hover:underline transition-colors" %></li>
+      <li aria-hidden="true">/</li>
+      <li><%= link_to @project.name, @project, class: "hover:text-[var(--mi-teal)] hover:underline transition-colors" %></li>
+      <% if @meeting %>
+        <li aria-hidden="true">/</li>
+        <li><%= link_to @meeting.title, project_meeting_path(@project, @meeting), class: "hover:text-[var(--mi-teal)] hover:underline transition-colors" %></li>
+      <% end %>
+      <li aria-hidden="true">/</li>
+      <li class="font-medium text-[var(--mi-text)]" aria-current="page"><%= page_title %></li>
+    </ol>
+  </nav>
 <% end %>
 
-<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-  <% if @meeting %>
-    <%= link_to t("followup.review.back_meeting"), project_meeting_path(@project, @meeting),
-          class: "inline-flex rounded-lg border border-[var(--mi-border)] px-3 py-2 text-sm text-[var(--mi-text-secondary)] hover:border-[var(--mi-teal)]/40" %>
-    <div class="flex flex-wrap gap-2">
-      <%= button_to t("followup.review.confirm_all"),
-            confirm_all_project_meeting_followup_drafts_path(@project, @meeting),
-            method: :patch,
-            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+<div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+  <div class="flex items-center gap-4">
+    <% back_url = @meeting ? project_meeting_path(@project, @meeting) : project_path(@project) %>
+    <%= link_to back_url,
+          class: "group flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--mi-border)] text-[var(--mi-text-secondary)] transition-colors hover:border-[var(--mi-teal)] hover:text-[var(--mi-teal)]",
+          title: @scope == :meeting ? t("followup.review.back_meeting") : t("followup.review.back_project"),
+          aria: { label: @scope == :meeting ? t("followup.review.back_meeting") : t("followup.review.back_project") } do %>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-hover:-translate-x-0.5"><path d="m15 18-6-6 6-6"/></svg>
+    <% end %>
+
+    <h1 class="text-2xl font-semibold text-[var(--mi-text)] tracking-tight">
+      <%= page_title %>
+    </h1>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <% if @meeting %>
       <%= button_to t("followup.review.dismiss_all"),
             dismiss_all_project_meeting_followup_drafts_path(@project, @meeting),
             method: :patch,
             form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm", default: "Dismiss all pending drafts?") } },
-            class: "rounded-lg border border-[var(--mi-border)] px-4 py-2 text-sm" %>
-    </div>
-  <% else %>
-    <%= link_to t("followup.review.back_project"), project_path(@project),
-          class: "inline-flex rounded-lg border border-[var(--mi-border)] px-3 py-2 text-sm text-[var(--mi-text-secondary)] hover:border-[var(--mi-teal)]/40" %>
-  <% end %>
+            class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
+      <%= button_to t("followup.review.confirm_all"),
+            confirm_all_project_meeting_followup_drafts_path(@project, @meeting),
+            method: :patch,
+            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+    <% else %>
+      <%= button_to t("followup.review.dismiss_all"),
+            dismiss_all_project_followup_drafts_path(@project),
+            method: :patch,
+            form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm_project") } },
+            class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
+      <%= button_to t("followup.review.send_all"),
+            confirm_all_project_followup_drafts_path(@project),
+            method: :patch,
+            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+    <% end %>
+  </div>
 </div>
-
-<h1 class="mb-6 text-2xl font-semibold text-[var(--mi-text)]">
-  <%= @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
-</h1>
 
 <% if @drafts.empty? && @recently_sent_drafts.blank? %>
   <%= render "followup_drafts/empty_state" %>
 <% else %>
   <% unless @drafts.empty? %>
-    <div class="space-y-10">
+    <div class="flex flex-col gap-10">
       <% @drafts_by_assignee.each do |assignee, group| %>
         <section>
-          <h2 class="mb-4 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= assignee %></h2>
+          <div class="mb-4 flex items-center gap-3">
+            <h2 class="text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= assignee %></h2>
+            <div class="h-px flex-1 bg-[var(--mi-border)]/40" aria-hidden="true"></div>
+          </div>
           <div class="grid gap-4 md:grid-cols-2">
             <% group.each do |draft| %>
               <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
@@ -53,11 +81,13 @@
   <% end %>
 
   <% if @recently_sent_drafts.present? %>
-    <section class="<%= @drafts.empty? ? "" : "mt-14" %> border-t border-[var(--mi-border)]/70 pt-10">
-      <h2 class="mb-2 text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">
-        <%= t("followup.review.recently_sent_heading") %>
-      </h2>
-      <p class="mb-6 text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.recently_sent_hint") %></p>
+    <section class="<%= @drafts.empty? ? "" : "mt-12" %> rounded-xl border border-[var(--mi-border)]/50 bg-[var(--mi-border)]/10 p-6">
+      <header class="mb-6">
+        <h2 class="text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85">
+          <%= t("followup.review.recently_sent_heading") %>
+        </h2>
+        <p class="mt-1 text-sm text-[var(--mi-text-secondary)]"><%= t("followup.review.recently_sent_hint") %></p>
+      </header>
       <div class="grid gap-4 md:grid-cols-2">
         <% @recently_sent_drafts.each do |draft| %>
           <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>

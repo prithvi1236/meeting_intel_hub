@@ -72,8 +72,12 @@
       </div>
       <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.send_footer_hint") %></p>
       <div class="pt-1">
-        <%= f.submit t("followup.review.send"),
-              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
+        <%= f.button type: :submit,
+              class: mi_chat_send_btn_class,
+              title: t("followup.review.send"),
+              aria: { label: t("followup.review.send") } do %>
+          <%= render "shared/mi_icon", name: :send, class: "h-5 w-5" %>
+        <% end %>
       </div>
     <% end %>
   <% else %>
