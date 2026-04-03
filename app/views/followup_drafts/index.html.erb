@@ -62,15 +62,19 @@
 <% if @drafts.empty? && @recently_sent_drafts.blank? %>
   <%= render "followup_drafts/empty_state" %>
 <% else %>
-  <% unless @drafts.empty? %>
-    <div class="flex flex-col gap-10">
-      <% @drafts_by_assignee.each do |assignee, group| %>
-        <section>
-          <div class="mb-4 flex items-center gap-3">
-            <h2 class="text-sm font-mono-mi font-medium uppercase tracking-wide text-[var(--mi-text)]/85"><%= assignee %></h2>
-            <div class="h-px flex-1 bg-[var(--mi-border)]/40" aria-hidden="true"></div>
+<% unless @drafts.empty? %>
+    <div class="flex flex-col">
+      <% @drafts_by_assignee.each_with_index do |(assignee, group), idx| %>
+        <section class="<%= idx.positive? ? "mt-12 border-t border-[var(--mi-border)]/50 pt-12" : "" %>">
+          <div class="mb-6 flex items-center gap-4">
+            <h2 class="flex items-center gap-2.5 text-sm font-mono-mi font-bold uppercase tracking-widest text-[var(--mi-text)]">
+              <span class="h-2 w-2 rounded-sm bg-[var(--mi-teal)] shadow-[0_0_8px_var(--mi-teal)]" aria-hidden="true"></span>
+              <%= assignee %>
+            </h2>
+            <div class="h-px flex-1 bg-gradient-to-r from-[var(--mi-border)] to-transparent" aria-hidden="true"></div>
           </div>
-          <div class="grid gap-4 md:grid-cols-2">
+          
+          <div class="grid gap-5 md:grid-cols-2">
             <% group.each do |draft| %>
               <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
             <% end %>
