@@ -1,5 +1,9 @@
 <%# locals: (draft:, meeting: nil) %>
-<div id="<%= dom_id(draft) %>" class="rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)]/50 p-4 shadow-sm">
+<div
+  id="<%= dom_id(draft) %>"
+  class="rounded-xl border border-[var(--mi-border)] bg-[var(--mi-surface)]/50 p-4 shadow-sm"
+  data-controller="followup-draft-editor"
+>
   <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
     <div>
       <p class="text-xs font-mono-mi uppercase tracking-wide text-[var(--mi-text-secondary)]"><%= draft.assignee_name %></p>
@@ -9,9 +13,14 @@
         </p>
       <% end %>
     </div>
-    <span class="rounded-full border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= followup_email_resolution_pill_classes(draft) %>">
-      <%= followup_email_resolution_label(draft) %>
-    </span>
+    <% unless draft.sent? %>
+      <span
+        class="rounded-full border px-2 py-0.5 text-[10px] font-mono-mi uppercase tracking-wider <%= followup_email_resolution_pill_classes(draft) %>"
+        <% if draft.missing_email? %>data-followup-draft-editor-target="missingEmailBadge"<% end %>
+      >
+        <%= followup_email_resolution_label(draft) %>
+      </span>
+    <% end %>
   </div>
 
   <% if draft.sent? %>
@@ -43,12 +52,14 @@
         <%= f.label :assignee_email, t("followup.review.assignee_email"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
         <%= f.email_field :assignee_email,
               required: true,
+              data: { action: "input->followup-draft-editor#handleInput keyup->followup-draft-editor#handleInput change->followup-draft-editor#handleInput" },
               class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
       </div>
       <div>
         <%= f.label :subject, t("followup.review.subject"), class: "block text-xs font-mono-mi uppercase text-[var(--mi-text-secondary)]" %>
         <%= f.text_field :subject,
               required: true,
+              data: { action: "input->followup-draft-editor#handleInput keyup->followup-draft-editor#handleInput change->followup-draft-editor#handleInput" },
               class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm" %>
       </div>
       <div>
@@ -56,6 +67,7 @@
         <%= f.text_area :body,
               rows: 6,
               required: true,
+              data: { action: "input->followup-draft-editor#handleInput keyup->followup-draft-editor#handleInput change->followup-draft-editor#handleInput" },
               class: "mt-1 w-full rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)] px-3 py-2 text-sm font-mono-mi" %>
       </div>
       <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.send_footer_hint") %></p>

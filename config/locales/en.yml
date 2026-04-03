@@ -84,9 +84,9 @@ en:
     panel:
       toggle_aria: "Open follow-up drafts panel"
       generate_queued_hint: "Drafts are created in the background. Refresh the page or wait a few seconds for counts to update."
-      per_assignee_heading: "Per-assignee options (optional)"
-      generate_all: "Generate email drafts"
-      generate_for_assignee: "Generate for this person"
+      per_assignee_heading: "Generate by assignee"
+      generate_all: "Generate drafts"
+      generate_for_assignee: "Generate"
       open_items_title: "Open action items"
       items_count:
         one: "%{count} item"
