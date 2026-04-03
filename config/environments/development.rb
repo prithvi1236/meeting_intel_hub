@@ -31,14 +31,24 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+
+  # Postmark (POSTMARK_API_TOKEN), generic SMTP, or tmp/mail/. Follow-ups need a job worker (bin/dev / bin/jobs) unless DEV_INLINE_JOBS=1.
+  config.action_mailer.perform_deliveries = true
+  smtp_settings = MailerSmtpConfig.build_smtp_settings
+  if smtp_settings
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.raise_delivery_errors = true
+    config.action_mailer.smtp_settings = smtp_settings
+  else
+    config.action_mailer.delivery_method = :file
+    config.action_mailer.file_settings = { location: Rails.root.join("tmp/mail") }
+    config.action_mailer.raise_delivery_errors = true
+  end
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -46,9 +56,14 @@ Rails.application.configure do
   # Raise an error on page load if there are pending migrations.
   config.active_record.migration_error = :page_load
 
-  # Use Solid Queue in development when running `bin/jobs` via Procfile.dev.
-  config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
+  # Solid Queue when running `bin/jobs` via Procfile.dev. For a single process without
+  # workers, use DEV_INLINE_JOBS=1 so jobs (e.g. FollowupSendJob) run in-process.
+  if ENV["DEV_INLINE_JOBS"].present?
+    config.active_job.queue_adapter = :async
+  else
+    config.active_job.queue_adapter = :solid_queue
+    config.solid_queue.connects_to = { database: { writing: :queue } }
+  end
 
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true
