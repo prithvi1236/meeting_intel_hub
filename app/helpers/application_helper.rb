@@ -1,5 +1,6 @@
 module ApplicationHelper
   include FollowupDraftsHelper
+  include ChatMarkdownHelper
 
   # Shared Tailwind fragments for meeting peek / panels (keeps views readable).
   MI_SURFACE_INTERACTIVE_BASE =

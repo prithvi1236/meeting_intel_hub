@@ -1,6 +1,12 @@
-<div class="flex justify-start" id="<%= dom_id(message) %>">
+<div class="flex <%= message.user? ? 'justify-end' : 'justify-start' %>" id="<%= dom_id(message) %>">
   <div class="max-w-[85%] rounded-[12px] border border-[var(--mi-border)] text-left <%= message.user? ? 'bg-[var(--mi-teal)]/15' : 'bg-[var(--mi-bg)]' %> px-3 py-2 text-sm">
-    <p class="whitespace-pre-wrap"><%= message.content %></p>
+    <% if message.user? %>
+      <p class="m-0 whitespace-pre-wrap"><%= message.content %></p>
+    <% else %>
+      <div class="mi-chat-markdown text-[var(--mi-text)] [&_a]:break-all [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--mi-border)] [&_blockquote]:pl-3 [&_blockquote]:text-[var(--mi-text-secondary)] [&_code]:rounded [&_code]:bg-[var(--mi-border)]/35 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[13px] [&_em]:italic [&_h1]:mb-2 [&_h1]:mt-3 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_p]:last:mb-0 [&_pre]:my-2 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-[var(--mi-border)] [&_pre]:bg-[var(--mi-bg)] [&_pre]:p-2 [&_pre]:text-[13px] [&_strong]:font-semibold [&_table]:my-2 [&_table]:w-full [&_table]:border-collapse [&_table]:text-left [&_td]:border [&_td]:border-[var(--mi-border)] [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-[var(--mi-border)] [&_th]:px-2 [&_th]:py-1 [&_th]:font-semibold [&_u]:underline [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5">
+        <%= assistant_chat_markdown_html(message.content) %>
+      </div>
+    <% end %>
     <% if message.assistant? && message.citations.present? %>
       <div class="mt-2 flex flex-wrap gap-1 border-t border-[var(--mi-border)] pt-2">
         <% message.citations.each do |c| %>
