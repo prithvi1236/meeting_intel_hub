@@ -5,15 +5,11 @@ module Followup
     module EmailSender
       module_function
 
-      # In development, deliver_now runs Postmark/SMTP inside FollowupSendJob (no separate
-      # MailDeliveryJob). Set FOLLOWUP_DELIVER_LATER=1 to keep deliver_later in development.
+      # Always deliver_now inside FollowupSendJob so one Solid Queue worker is enough (no separate
+      # ActionMailer job on the mailers queue). Errors are handled by Followup::SenderService.
       def deliver(draft)
         mail = FollowupMailer.action_item_followup(draft.id)
-        if Rails.env.development? && ENV["FOLLOWUP_DELIVER_LATER"] != "1"
-          mail.deliver_now
-        else
-          mail.deliver_later
-        end
+        MailDeliveryResendFallback.deliver_now_with_fallback(mail)
       end
     end
   end
