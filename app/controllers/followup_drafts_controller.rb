@@ -186,7 +186,7 @@ class FollowupDraftsController < ApplicationController
       p.permit(:assignee_email, :subject, :body)
     end
 
-    # Persist values from the shared review form before confirm_all / per-card Send (same form).
+    # Persist values from the shared review form before Send all / per-card Send (same form).
     def apply_followup_bulk_field_updates!
       bulk = params[:followup_drafts]
       return if bulk.blank?

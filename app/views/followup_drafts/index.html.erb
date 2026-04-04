@@ -37,30 +37,24 @@
   </div>
 
   <div class="flex flex-wrap items-center gap-3">
-    <% if @meeting %>
-      <%= button_to t("followup.review.dismiss_all"),
-            dismiss_all_project_meeting_followup_drafts_path(@project, @meeting),
-            method: :patch,
-            form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm", default: "Dismiss all pending drafts?") } },
-            class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
-      <% if @drafts.any? %>
-        <%= button_tag t("followup.review.confirm_all"),
-              type: "submit",
-              form: bulk_form_id,
-              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+    <% if @drafts.any? %>
+      <% if @meeting %>
+        <%= button_to t("followup.review.dismiss_all"),
+              dismiss_all_project_meeting_followup_drafts_path(@project, @meeting),
+              method: :patch,
+              form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm", default: "Dismiss all pending drafts?") } },
+              class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
+      <% else %>
+        <%= button_to t("followup.review.dismiss_all"),
+              dismiss_all_project_followup_drafts_path(@project),
+              method: :patch,
+              form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm_project") } },
+              class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
       <% end %>
-    <% else %>
-      <%= button_to t("followup.review.dismiss_all"),
-            dismiss_all_project_followup_drafts_path(@project),
-            method: :patch,
-            form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm_project") } },
-            class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
-      <% if @drafts.any? %>
-        <%= button_tag t("followup.review.send_all"),
-              type: "submit",
-              form: bulk_form_id,
-              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
-      <% end %>
+      <%= button_tag t("followup.review.send_all"),
+            type: "submit",
+            form: bulk_form_id,
+            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
     <% end %>
   </div>
 </div>
