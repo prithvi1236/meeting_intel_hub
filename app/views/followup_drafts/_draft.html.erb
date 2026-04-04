@@ -35,9 +35,12 @@
       <p class="rounded-lg border border-[var(--mi-teal)]/35 bg-[var(--mi-teal)]/[0.08] px-3 py-2 text-[var(--mi-text)]">
         <%= t("followup.review.queued_for_delivery") %>
       </p>
-      <% if Rails.env.development? %>
-        <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.queued_worker_hint") %></p>
+      <% if draft.delivery_queue_stuck? %>
+        <p class="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-[var(--mi-text)]">
+          <%= t("followup.review.queued_stale_warning") %>
+        </p>
       <% end %>
+      <p class="text-xs text-[var(--mi-text-secondary)]"><%= t("followup.review.queued_worker_hint") %></p>
       <%= render "followup_drafts/draft_email_preview", draft: draft %>
     </div>
   <% elsif draft.pending_review? || draft.failed? %>

@@ -73,6 +73,24 @@ RSpec.describe FollowupDraft, type: :model do
     end
   end
 
+  describe "#delivery_queue_stuck?" do
+    it "is false when not confirmed" do
+      draft = create(:followup_draft, status: "pending_review")
+      expect(draft.delivery_queue_stuck?).to be false
+    end
+
+    it "is false when confirmed but recently updated" do
+      draft = create(:followup_draft, status: "confirmed")
+      expect(draft.delivery_queue_stuck?).to be false
+    end
+
+    it "is true when confirmed and updated long ago" do
+      draft = create(:followup_draft, status: "confirmed")
+      draft.update_columns(updated_at: 10.minutes.ago)
+      expect(draft.delivery_queue_stuck?).to be true
+    end
+  end
+
   describe "#log_event and after_create" do
     it "creates draft_generated on create" do
       draft = create(:followup_draft)

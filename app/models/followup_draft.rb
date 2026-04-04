@@ -38,6 +38,11 @@ class FollowupDraft < ApplicationRecord
     confirmed? && (scheduled_send_at.nil? || scheduled_send_at <= Time.current)
   end
 
+  # Confirmed drafts should flip to sent/failed quickly once FollowupSendJob runs.
+  def delivery_queue_stuck?(stale_after: 3.minutes)
+    confirmed? && updated_at < stale_after.ago
+  end
+
   # All fields required before the organiser can queue email delivery.
   def sendable?
     assignee_email.to_s.strip.match?(URI::MailTo::EMAIL_REGEXP) &&
