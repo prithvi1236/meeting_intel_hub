@@ -47,7 +47,12 @@ class FollowupDraftsController < ApplicationController
       return
     end
 
-    @draft.assign_attributes(followup_draft_fields_params)
+    if params[:followup_drafts].present?
+      apply_followup_bulk_field_updates!
+      @draft.reload
+    else
+      @draft.assign_attributes(followup_draft_fields_params)
+    end
     @draft.sender_email = current_user.email
     unless @draft.sendable?
       redirect_back_or_to followup_review_path, alert: t("followup.review.send_incomplete"), status: :see_other
@@ -66,6 +71,8 @@ class FollowupDraftsController < ApplicationController
   end
 
   def confirm_all
+    apply_followup_bulk_field_updates! if params[:followup_drafts].present?
+
     pending = pending_review_drafts_for_bulk.to_a
     queued = 0
     pending.each do |draft|
@@ -165,7 +172,45 @@ class FollowupDraftsController < ApplicationController
     end
 
     def followup_draft_fields_params
-      params.expect(followup_draft: [ :subject, :body, :assignee_email ])
+      id = params[:id].to_s
+      nested = params[:followup_drafts]&.[](id)
+      if nested.present?
+        permit_followup_draft_slice(nested)
+      else
+        params.expect(followup_draft: [ :subject, :body, :assignee_email ])
+      end
+    end
+
+    def permit_followup_draft_slice(attrs)
+      p = attrs.is_a?(ActionController::Parameters) ? attrs : ActionController::Parameters.new(attrs)
+      p.permit(:assignee_email, :subject, :body)
+    end
+
+    # Persist values from the shared review form before confirm_all / per-card Send (same form).
+    def apply_followup_bulk_field_updates!
+      bulk = params[:followup_drafts]
+      return if bulk.blank?
+
+      bulk = ActionController::Parameters.new(bulk) unless bulk.is_a?(ActionController::Parameters)
+      ids = bulk.keys.map(&:to_s)
+      drafts_by_id = editable_followup_drafts_for_bulk.where(id: ids).index_by { |d| d.id.to_s }
+
+      bulk.each do |id_str, attrs|
+        draft = drafts_by_id[id_str.to_s]
+        next unless draft
+
+        draft.assign_attributes(permit_followup_draft_slice(attrs))
+        draft.save
+      end
+    end
+
+    def editable_followup_drafts_for_bulk
+      base = if @meeting
+        @meeting.followup_drafts
+      else
+        FollowupDraft.joins(:meeting).where(meetings: { project_id: @project.id })
+      end
+      base.where(status: %i[pending_review failed])
     end
 
     def followup_actor

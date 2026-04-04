@@ -1,5 +1,7 @@
 <% page_title = @scope == :meeting ? t("followup.review.title_meeting") : t("followup.review.title_project") %>
 <% content_for :title, page_title %>
+<% bulk_form_id = "followup-review-bulk-fields" %>
+<% confirm_all_url = @meeting ? confirm_all_project_meeting_followup_drafts_path(@project, @meeting) : confirm_all_project_followup_drafts_path(@project) %>
 
 <% content_for :breadcrumb do %>
   <nav aria-label="Breadcrumb" class="mb-6 flex text-sm text-[var(--mi-text-secondary)]">
@@ -41,20 +43,24 @@
             method: :patch,
             form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm", default: "Dismiss all pending drafts?") } },
             class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
-      <%= button_to t("followup.review.confirm_all"),
-            confirm_all_project_meeting_followup_drafts_path(@project, @meeting),
-            method: :patch,
-            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+      <% if @drafts.any? %>
+        <%= button_tag t("followup.review.confirm_all"),
+              type: "submit",
+              form: bulk_form_id,
+              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+      <% end %>
     <% else %>
       <%= button_to t("followup.review.dismiss_all"),
             dismiss_all_project_followup_drafts_path(@project),
             method: :patch,
             form: { data: { turbo_confirm: t("followup.review.dismiss_all_confirm_project") } },
             class: "rounded-lg border border-[var(--mi-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--mi-text)] transition-colors hover:border-[var(--mi-text)]" %>
-      <%= button_to t("followup.review.send_all"),
-            confirm_all_project_followup_drafts_path(@project),
-            method: :patch,
-            class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+      <% if @drafts.any? %>
+        <%= button_tag t("followup.review.send_all"),
+              type: "submit",
+              form: bulk_form_id,
+              class: "rounded-lg bg-[var(--mi-teal)] px-4 py-2.5 text-sm font-medium text-[#0f0f0f] shadow-sm transition-opacity hover:opacity-90" %>
+      <% end %>
     <% end %>
   </div>
 </div>
@@ -63,25 +69,27 @@
   <%= render "followup_drafts/empty_state" %>
 <% else %>
 <% unless @drafts.empty? %>
-    <div class="flex flex-col">
-      <% @drafts_by_assignee.each_with_index do |(assignee, group), idx| %>
-        <section class="<%= idx.positive? ? "mt-12 border-t border-[var(--mi-border)]/50 pt-12" : "" %>">
-          <div class="mb-6 flex items-center gap-4">
-            <h2 class="flex items-center gap-2.5 text-sm font-mono-mi font-bold uppercase tracking-widest text-[var(--mi-text)]">
-              <span class="h-2 w-2 rounded-sm bg-[var(--mi-teal)] shadow-[0_0_8px_var(--mi-teal)]" aria-hidden="true"></span>
-              <%= assignee %>
-            </h2>
-            <div class="h-px flex-1 bg-gradient-to-r from-[var(--mi-border)] to-transparent" aria-hidden="true"></div>
-          </div>
-          
-          <div class="grid gap-5 md:grid-cols-2">
-            <% group.each do |draft| %>
-              <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
-            <% end %>
-          </div>
-        </section>
-      <% end %>
-    </div>
+    <%= form_with url: confirm_all_url, method: :patch, html: { id: bulk_form_id, class: "contents" } do %>
+      <div class="flex flex-col">
+        <% @drafts_by_assignee.each_with_index do |(assignee, group), idx| %>
+          <section class="<%= idx.positive? ? "mt-12 border-t border-[var(--mi-border)]/50 pt-12" : "" %>">
+            <div class="mb-6 flex items-center gap-4">
+              <h2 class="flex items-center gap-2.5 text-sm font-mono-mi font-bold uppercase tracking-widest text-[var(--mi-text)]">
+                <span class="h-2 w-2 rounded-sm bg-[var(--mi-teal)] shadow-[0_0_8px_var(--mi-teal)]" aria-hidden="true"></span>
+                <%= assignee %>
+              </h2>
+              <div class="h-px flex-1 bg-gradient-to-r from-[var(--mi-border)] to-transparent" aria-hidden="true"></div>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2">
+              <% group.each do |draft| %>
+                <%= render "followup_drafts/draft", draft: draft, meeting: @meeting %>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+    <% end %>
   <% end %>
 
   <% if @recently_sent_drafts.present? %>

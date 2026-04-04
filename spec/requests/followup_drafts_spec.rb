@@ -133,6 +133,38 @@ RSpec.describe "Follow-up drafts", type: :request do
       expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
       expect(flash[:alert]).to be_present
     end
+
+    it "persists recipient and other fields from the shared review form before confirming (e.g. Resend +labels)" do
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "A",
+        assignee_email: "",
+        subject: "Hi",
+        body: "Body",
+        status: "pending_review"
+      )
+      resend_test = "delivered+user3@resend.dev"
+
+      expect do
+        patch confirm_all_project_meeting_followup_drafts_path(project, meeting), params: {
+          followup_drafts: {
+            draft.id.to_s => {
+              assignee_email: resend_test,
+              subject: "Hi",
+              body: "Body"
+            }
+          }
+        }
+      end.to have_enqueued_job(FollowupSendJob).with(draft.id)
+
+      draft.reload
+      expect(draft.assignee_email).to eq(resend_test)
+      expect(draft).to be_confirmed
+      expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
+    end
   end
 
   describe "PATCH /projects/:project_id/followup_drafts/confirm_all" do
@@ -230,6 +262,39 @@ RSpec.describe "Follow-up drafts", type: :request do
       end.not_to have_enqueued_job(FollowupSendJob)
 
       expect(draft.reload).to be_pending_review
+      expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
+    end
+
+    it "accepts shared-form params (followup_drafts[id]) including plus-addressed recipients" do
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "A",
+        assignee_email: "",
+        subject: "Old",
+        body: "Body text",
+        status: "pending_review"
+      )
+      resend_test = "delivered+user3@resend.dev"
+
+      expect do
+        patch followup_draft_path(draft), params: {
+          followup_drafts: {
+            draft.id.to_s => {
+              assignee_email: resend_test,
+              subject: "Updated subject",
+              body: "Updated body"
+            }
+          }
+        }
+      end.to have_enqueued_job(FollowupSendJob).with(draft.id)
+
+      draft.reload
+      expect(draft).to be_confirmed
+      expect(draft.assignee_email).to eq(resend_test)
+      expect(draft.subject).to eq("Updated subject")
       expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
     end
   end
