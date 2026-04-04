@@ -6,7 +6,7 @@ class FollowupDraftsController < ApplicationController
   before_action :set_project, only: %i[index generate_for_project generate_for_meeting confirm_all dismiss_all]
   before_action :set_meeting_when_nested, only: %i[index generate_for_meeting confirm_all dismiss_all]
   before_action :require_meeting!, only: %i[generate_for_meeting]
-  before_action :set_followup_draft_for_shallow, only: %i[update]
+  before_action :set_followup_draft_for_shallow, only: %i[update dismiss]
 
   def index
     if @meeting
@@ -102,6 +102,19 @@ class FollowupDraftsController < ApplicationController
     end
     redirect_back_or_to followup_review_path,
       notice: t("followup.review.dismiss_all_done"),
+      status: :see_other
+  end
+
+  def dismiss
+    unless @draft.pending_review? || @draft.failed?
+      redirect_back_or_to followup_review_path, alert: t("followup.review.dismiss_draft_not_allowed"), status: :see_other
+      return
+    end
+
+    @draft.update!(status: :dismissed)
+    @draft.log_event(:dismissed, actor: followup_actor)
+    redirect_back_or_to followup_review_path,
+      notice: t("followup.review.dismiss_draft_done"),
       status: :see_other
   end
 

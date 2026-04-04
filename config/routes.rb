@@ -40,6 +40,9 @@ Rails.application.routes.draw do
           patch :confirm_all
           patch :dismiss_all
         end
+        member do
+          patch :dismiss
+        end
       end
     end
     resources :chat_sessions, only: %i[index new create show destroy] do

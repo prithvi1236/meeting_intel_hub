@@ -219,6 +219,58 @@ RSpec.describe "Follow-up drafts", type: :request do
     end
   end
 
+  describe "PATCH /followup_drafts/:id/dismiss" do
+    it "dismisses a pending_review draft" do
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "A",
+        status: "pending_review"
+      )
+
+      patch dismiss_followup_draft_path(draft)
+
+      expect(draft.reload).to be_dismissed
+      expect(draft.followup_events.where(event_type: "dismissed").count).to eq(1)
+      expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
+    end
+
+    it "dismisses a failed draft" do
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "A",
+        status: "failed",
+        delivery_error: "SMTP error"
+      )
+
+      patch dismiss_followup_draft_path(draft)
+
+      expect(draft.reload).to be_dismissed
+      expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
+    end
+
+    it "does not dismiss a confirmed draft" do
+      item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
+      draft = create(
+        :followup_draft,
+        meeting: meeting,
+        extracted_item: item,
+        assignee_name: "A",
+        status: "confirmed"
+      )
+
+      patch dismiss_followup_draft_path(draft)
+
+      expect(draft.reload).to be_confirmed
+      expect(response).to redirect_to(project_meeting_followup_drafts_path(project, meeting))
+    end
+  end
+
   describe "PATCH /followup_drafts/:id (send)" do
     it "confirms, saves fields, and enqueues send when complete" do
       item = create(:extracted_item, meeting: meeting, item_type: "action_item", owner: "A", status: "open")
