@@ -18,7 +18,8 @@ require "action_cable/engine"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-require_relative "mailer_smtp_config"
+# Loaded before config/environments/*.rb (those reference OutboundMailConfig; Zeitwerk has not autoloaded app/models yet).
+require_relative "../app/models/outbound_mail_config"
 
 module MeetingIntel
   class Application < Rails::Application

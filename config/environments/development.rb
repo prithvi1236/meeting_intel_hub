@@ -39,11 +39,11 @@ Rails.application.configure do
 
   # Postmark API (POSTMARK_API_TOKEN), generic SMTP, or tmp/mail/. Follow-ups need a job worker (bin/dev / bin/jobs) unless DEV_INLINE_JOBS=1.
   config.action_mailer.perform_deliveries = true
-  if MailerSmtpConfig.postmark_configured?
+  if ::OutboundMailConfig.postmark_configured?
     config.action_mailer.delivery_method = :postmark
-    config.action_mailer.postmark_settings = MailerSmtpConfig.build_postmark_settings
+    config.action_mailer.postmark_settings = ::OutboundMailConfig.build_postmark_settings
     config.action_mailer.raise_delivery_errors = true
-  elsif (smtp_settings = MailerSmtpConfig.build_smtp_settings)
+  elsif (smtp_settings = ::OutboundMailConfig.build_smtp_settings)
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.smtp_settings = smtp_settings

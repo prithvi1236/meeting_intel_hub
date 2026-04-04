@@ -12,8 +12,8 @@ class MailDiagnostics
 
   def run
     line "=== Meeting Intel — mail:diag ==="
-    smtp = MailerSmtpConfig.build_smtp_settings
-    line summarize_outbound_config(smtp)
+    generic_smtp = ::OutboundMailConfig.build_smtp_settings
+    line summarize_outbound_config(generic_smtp)
     line
     line "--- Action Mailer (RAILS_ENV=#{Rails.env}) ---"
     line "delivery_method: #{ActionMailer::Base.delivery_method}"
@@ -21,6 +21,8 @@ class MailDiagnostics
     line
     line "--- Active Job ---"
     line "Adapter: #{ActiveJob::Base.queue_adapter.class.name}"
+    line "Follow-up email: sent inside FollowupSendJob (deliver_now); no separate mailers queue needed."
+    line "Tip: follow-ups need a worker unless DEV_INLINE_JOBS=1 (see .env.example)."
     line
     line "--- FollowupDraft ---"
     line FollowupDraft.group(:status).count.inspect
@@ -30,8 +32,8 @@ class MailDiagnostics
     line
     line followup_send_job_summary
     line
-    line "--- SMTP auth (no email sent) ---"
-    line smtp_auth_result(smtp)
+    line "--- Generic SMTP auth probe (skipped when using Postmark/Resend API) ---"
+    line smtp_auth_result(generic_smtp)
     line
     line "=== end mail:diag ==="
   end
@@ -41,11 +43,12 @@ class MailDiagnostics
       @out.puts(msg)
     end
 
-    def summarize_outbound_config(smtp)
-      if MailerSmtpConfig.postmark_configured?
-        "Postmark: HTTPS API (token set; not using smtp.postmarkapp.com)"
-      elsif smtp
-        "SMTP: #{smtp[:address]}:#{smtp[:port]} auth=#{smtp[:authentication]}"
+    def summarize_outbound_config(generic_smtp)
+      if ::OutboundMailConfig.postmark_configured?
+        extra = ::OutboundMailConfig.resend_fallback_configured? ? " + Resend API fallback (RESEND_API_KEY)" : ""
+        "Postmark: HTTPS API (token set; not using smtp.postmarkapp.com)#{extra}"
+      elsif generic_smtp
+        "Generic SMTP (ActionMailer): #{generic_smtp[:address]}:#{generic_smtp[:port]} auth=#{generic_smtp[:authentication]}"
       else
         "Outbound: not configured (dev falls back to tmp/mail/)"
       end
@@ -74,25 +77,25 @@ class MailDiagnostics
       "Solid Queue: #{e.message}"
     end
 
-    def smtp_auth_result(smtp)
-      if MailerSmtpConfig.postmark_configured?
-        return "Skipped (Postmark uses API; check Activity in Postmark dashboard)"
+    def smtp_auth_result(generic_smtp)
+      if ::OutboundMailConfig.postmark_configured?
+        return "Skipped (Postmark uses HTTPS API; check Activity in Postmark dashboard)"
       end
 
-      unless smtp && smtp[:user_name].present? && smtp[:password].present?
-        return "Skipped (no SMTP credentials)"
+      unless generic_smtp && generic_smtp[:user_name].present? && generic_smtp[:password].present?
+        return "Skipped (no generic SMTP credentials; not used when Postmark is set)"
       end
 
       require "net/smtp"
       ok = nil
       Net::SMTP.start(
-        smtp[:address],
-        smtp[:port],
+        generic_smtp[:address],
+        generic_smtp[:port],
         ENV.fetch("SMTP_DOMAIN", "localhost"),
-        smtp[:user_name],
-        smtp[:password],
-        smtp[:authentication] || :plain
-      ) { ok = "OK: authenticated to #{smtp[:address]}" }
+        generic_smtp[:user_name],
+        generic_smtp[:password],
+        generic_smtp[:authentication] || :plain
+      ) { ok = "OK: authenticated to #{generic_smtp[:address]}" }
       ok
     rescue StandardError => e
       "FAILED: #{e.class}: #{e.message}"

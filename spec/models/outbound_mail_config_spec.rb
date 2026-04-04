@@ -2,10 +2,11 @@
 
 require "rails_helper"
 
-RSpec.describe MailerSmtpConfig do
+RSpec.describe OutboundMailConfig do
   KEYS = %w[
     POSTMARK_API_TOKEN POSTMARK_SERVER_API_TOKEN SMTP_ADDRESS SMTP_PORT SMTP_DOMAIN
     SMTP_USER_NAME SMTP_PASSWORD SMTP_AUTHENTICATION SMTP_ENABLE_STARTTLS_AUTO
+    RESEND_API_KEY RESEND_SHARED_FROM_EMAIL
   ].freeze
 
   around do |example|
@@ -72,6 +73,53 @@ RSpec.describe MailerSmtpConfig do
 
     it "returns nil when nothing is configured" do
       expect(described_class.build_smtp_settings).to be_nil
+    end
+  end
+
+  describe ".configure_resend_client!" do
+    it "sets Resend.api_key when RESEND_API_KEY is set" do
+      ENV["RESEND_API_KEY"] = "re_from_spec"
+      described_class.configure_resend_client!
+      expect(Resend.api_key).to eq("re_from_spec")
+    end
+
+    it "does not raise when RESEND_API_KEY is blank" do
+      expect { described_class.configure_resend_client! }.not_to raise_error
+    end
+  end
+
+  describe ".resend_fallback_configured?" do
+    it "is true when RESEND_API_KEY is set" do
+      ENV["RESEND_API_KEY"] = "re_xxx"
+      expect(described_class.resend_fallback_configured?).to be true
+    end
+
+    it "is false when key missing" do
+      expect(described_class.resend_fallback_configured?).to be false
+    end
+  end
+
+  describe ".resend_fallback_ready_for_postmark?" do
+    it "is true when both Postmark token and Resend key are set" do
+      ENV["POSTMARK_API_TOKEN"] = "pm"
+      ENV["RESEND_API_KEY"] = "re"
+      expect(described_class.resend_fallback_ready_for_postmark?).to be true
+    end
+
+    it "is false when only Postmark is set" do
+      ENV["POSTMARK_API_TOKEN"] = "pm"
+      expect(described_class.resend_fallback_ready_for_postmark?).to be false
+    end
+  end
+
+  describe ".resend_shared_from" do
+    it "defaults to onboarding@resend.dev" do
+      expect(described_class.resend_shared_from).to eq("onboarding@resend.dev")
+    end
+
+    it "reads RESEND_SHARED_FROM_EMAIL" do
+      ENV["RESEND_SHARED_FROM_EMAIL"] = "custom@resend.dev"
+      expect(described_class.resend_shared_from).to eq("custom@resend.dev")
     end
   end
 end
