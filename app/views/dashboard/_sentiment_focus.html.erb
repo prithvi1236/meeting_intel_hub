@@ -1,0 +1,43 @@
+<div class="<%= mi_panel_class %> flex min-h-[12rem] flex-col overflow-hidden">
+  <div class="<%= mi_panel_header_class %>">
+    Where to focus next
+  </div>
+  <div class="flex flex-1 flex-col gap-2 p-3 text-sm">
+    <% if @sentiment_focus_rows.blank? %>
+      <p class="m-0 text-[var(--mi-text-secondary)]">
+        Complete at least one meeting with sentiment scores to see project-level swings.
+      </p>
+    <% else %>
+      <p class="m-0 text-xs text-[var(--mi-text-secondary)]">
+        Last scored meeting vs average of earlier scored meetings in the same project (most concerning first).
+      </p>
+      <ul class="m-0 list-none space-y-2 p-0">
+        <% @sentiment_focus_rows.each do |row| %>
+          <li class="rounded-lg border border-[var(--mi-border)] bg-[var(--mi-bg)]/40 px-3 py-2">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <%= link_to row.project.name, row.project, class: "font-medium text-[var(--mi-text)] hover:text-[var(--mi-teal)]" %>
+              <span class="text-xs font-mono-mi <%= sentiment_color(row.last_score) %>">
+                <%= number_with_precision(row.last_score, precision: 2) %>
+              </span>
+            </div>
+            <p class="mt-1 mb-0 line-clamp-1 text-xs text-[var(--mi-text-secondary)]">
+              <%= link_to row.last_meeting.title, project_meeting_path(row.project, row.last_meeting), class: "text-[var(--mi-text)] hover:text-[var(--mi-teal)]" %>
+              <% if row.last_meeting.meeting_date %>
+                · <%= row.last_meeting.meeting_date.to_fs(:long) %>
+              <% end %>
+            </p>
+            <% if row.swing.nil? %>
+              <p class="mt-1 mb-0 text-xs text-[var(--mi-text-secondary)]">Single scored meeting — no prior average yet.</p>
+            <% else %>
+              <p class="mt-1 mb-0 text-xs font-mono-mi text-[var(--mi-text)]">
+                vs prior avg <%= number_with_precision(row.prior_avg, precision: 2) %>
+                <span class="text-[var(--mi-text-secondary)]">→</span>
+                swing <%= sentiment_delta_prefix(row.swing) %><%= number_with_precision(row.swing, precision: 2) %>
+              </p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+</div>

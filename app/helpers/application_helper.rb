@@ -94,6 +94,12 @@ module ApplicationHelper
     end
   end
 
+  def sentiment_delta_prefix(value)
+    return "" if value.nil? || value.zero?
+
+    value.positive? ? "+" : ""
+  end
+
   def sentiment_bar_class(label)
     case label.to_s
     when "consensus" then "bg-[var(--mi-green)]"

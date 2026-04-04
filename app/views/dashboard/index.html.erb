@@ -24,6 +24,12 @@
   </div>
 </div>
 
+<% unless @projects.empty? %>
+  <div class="mb-8">
+    <%= render "dashboard/sentiment_focus" %>
+  </div>
+<% end %>
+
 <% if @projects.empty? %>
   <%= render "shared/empty_state",
       title: "No projects yet",
