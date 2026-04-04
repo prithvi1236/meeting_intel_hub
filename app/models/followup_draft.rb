@@ -21,8 +21,6 @@ class FollowupDraft < ApplicationRecord
 
   validates :meeting, :extracted_item, :assignee_name, :body, :subject, presence: true
   validates :channel, :status, :email_resolution_status, presence: true
-  validates :assignee_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
-  validates :sender_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 
   validate :extracted_item_belongs_to_meeting
 
@@ -45,7 +43,7 @@ class FollowupDraft < ApplicationRecord
 
   # All fields required before the organiser can queue email delivery.
   def sendable?
-    assignee_email.to_s.strip.match?(URI::MailTo::EMAIL_REGEXP) &&
+    assignee_email.to_s.strip.present? &&
       subject.to_s.strip.present? &&
       body.to_s.strip.present?
   end

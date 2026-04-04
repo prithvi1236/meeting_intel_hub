@@ -10,11 +10,6 @@ RSpec.describe FollowupDraft, type: :model do
       expect(build(:followup_draft, subject: "")).not_to be_valid
     end
 
-    it "validates assignee_email format when present" do
-      expect(build(:followup_draft, assignee_email: "bad")).not_to be_valid
-      expect(build(:followup_draft, assignee_email: "ok@example.com")).to be_valid
-    end
-
     it "requires extracted_item to belong to the same meeting" do
       other_meeting = create(:meeting)
       draft = build(:followup_draft, meeting: create(:meeting), extracted_item: create(:extracted_item, meeting: other_meeting))
@@ -41,16 +36,16 @@ RSpec.describe FollowupDraft, type: :model do
   end
 
   describe "#sendable?" do
-    it "is true when to, subject, and body are present and email is valid" do
+    it "is true when assignee email, subject, and body are non-blank" do
       draft = build(:followup_draft, assignee_email: "a@b.com", subject: "Hi", body: "Text")
       expect(draft).to be_sendable
+      expect(build(:followup_draft, assignee_email: "any-string", subject: "Hi", body: "Text")).to be_sendable
     end
 
-    it "is false when any field is blank or email is invalid" do
+    it "is false when any field is blank" do
       expect(build(:followup_draft, assignee_email: "", subject: "Hi", body: "Text")).not_to be_sendable
       expect(build(:followup_draft, assignee_email: "a@b.com", subject: "", body: "Text")).not_to be_sendable
       expect(build(:followup_draft, assignee_email: "a@b.com", subject: "Hi", body: "")).not_to be_sendable
-      expect(build(:followup_draft, assignee_email: "nope", subject: "Hi", body: "Text")).not_to be_sendable
     end
   end
 

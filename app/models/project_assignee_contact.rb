@@ -9,7 +9,7 @@ class ProjectAssigneeContact < ApplicationRecord
   normalizes :default_email, with: ->(e) { e.to_s.strip }
 
   validates :assignee_name_normalized, presence: true
-  validates :default_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :default_email, presence: true
   validates :assignee_name_normalized, uniqueness: { scope: :project_id }
 
   before_validation :normalize_aliases_list
