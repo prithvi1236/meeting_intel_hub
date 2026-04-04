@@ -42,4 +42,20 @@ RSpec.describe DashboardSentimentSnapshot do
       expect(described_class.focus_rows(user)).to be_empty
     end
   end
+
+  describe ".next_open_due_dates_by_project" do
+    it "returns the earliest open due_date per project" do
+      m1 = create(:meeting, project: project, status: "completed")
+      m2 = create(:meeting, project: project, status: "completed")
+      create(:extracted_item, meeting: m1, due_date: Date.new(2026, 6, 15), status: "open")
+      create(:extracted_item, meeting: m2, due_date: Date.new(2026, 6, 1), status: "open")
+
+      map = described_class.next_open_due_dates_by_project([ project.id ])
+      expect(map[project.id]).to eq(Date.new(2026, 6, 1))
+    end
+
+    it "returns {} for blank ids" do
+      expect(described_class.next_open_due_dates_by_project([])).to eq({})
+    end
+  end
 end

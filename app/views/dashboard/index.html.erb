@@ -51,6 +51,7 @@
         <% end %>
         <div class="flex flex-wrap gap-2 text-xs font-mono-mi">
           <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Last meeting <%= project.last_meeting_date&.to_fs(:long) || "—" %></span>
+          <span class="rounded-full border border-[var(--mi-border)] px-2 py-0.5">Next Action Item due <%= project.next_open_due_date(precomputed_lookup: @next_open_due_by_project_id)&.to_fs(:long) || "—" %></span>
         </div>
         <%= link_to "Open project", project, class: "mt-auto inline-flex justify-center rounded-[8px] bg-[var(--mi-teal)] px-4 py-2 text-sm font-medium text-[#0f0f0f]" %>
       </div>

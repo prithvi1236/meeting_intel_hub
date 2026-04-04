@@ -18,6 +18,21 @@ class Project < ApplicationRecord
     meetings.maximum(:meeting_date)
   end
 
+  # Earliest due_date among open extracted items for this project.
+  # Pass precomputed_lookup: from DashboardSentimentSnapshot.next_open_due_dates_by_project
+  # to avoid N+1 on list pages (Hash keys may be UUID or String from SQL GROUP BY).
+  def next_open_due_date(precomputed_lookup: nil)
+    if precomputed_lookup
+      precomputed_lookup[id] || precomputed_lookup[id.to_s]
+    else
+      ExtractedItem.open
+        .where.not(due_date: nil)
+        .joins(:meeting)
+        .where(meetings: { project_id: id })
+        .minimum(:due_date)
+    end
+  end
+
   private
     # Strip ActiveStorage rows before cascade destroy so purging never runs on a nil Transcript
     # (e.g. legacy record_id type mismatch). Orphan Transcript attachments are removed too.

@@ -42,6 +42,17 @@ class DashboardSentimentSnapshot
       rows.sort_by(&:rank_key).first(limit)
     end
 
+    def next_open_due_dates_by_project(project_ids)
+      return {} if project_ids.blank?
+
+      ExtractedItem.open
+        .where.not(due_date: nil)
+        .joins(:meeting)
+        .where(meetings: { project_id: project_ids })
+        .group("meetings.project_id")
+        .minimum(:due_date)
+    end
+
     private
       def scored_completed_meetings_for(user)
         Meeting.joins(:project).where(projects: { user_id: user.id }).completed.where.not(overall_sentiment_score: nil)

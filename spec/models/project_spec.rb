@@ -26,6 +26,29 @@ RSpec.describe Project, type: :model do
     end
   end
 
+  describe "#next_open_due_date" do
+    let(:project) { create(:project) }
+
+    it "returns the minimum open due_date across meetings" do
+      m1 = create(:meeting, project: project, status: "completed")
+      m2 = create(:meeting, project: project, status: "completed")
+      create(:extracted_item, meeting: m1, due_date: Date.new(2026, 7, 20), status: "open")
+      create(:extracted_item, meeting: m2, due_date: Date.new(2026, 7, 1), status: "open")
+
+      expect(project.next_open_due_date).to eq(Date.new(2026, 7, 1))
+    end
+
+    it "reads from precomputed_lookup using UUID or string keys" do
+      d = Date.new(2026, 5, 10)
+      expect(project.next_open_due_date(precomputed_lookup: { project.id => d })).to eq(d)
+      expect(project.next_open_due_date(precomputed_lookup: { project.id.to_s => d })).to eq(d)
+    end
+
+    it "returns nil when precomputed_lookup has no entry" do
+      expect(project.next_open_due_date(precomputed_lookup: {})).to be_nil
+    end
+  end
+
   describe "destroy with transcripts" do
     it "removes project and transcript file attachments without error" do
       project = create(:project)

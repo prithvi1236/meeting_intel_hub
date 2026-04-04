@@ -5,6 +5,7 @@ class DashboardController < ApplicationController
     @open_action_items = ExtractedItem.open.action_items.joins(meeting: :project).where(projects: { user_id: current_user.id }).count
     @avg_sentiment = Meeting.joins(:project).where(projects: { user_id: current_user.id }).completed.where.not(overall_sentiment_score: nil).average(:overall_sentiment_score)&.to_f
     @sentiment_focus_rows = DashboardSentimentSnapshot.focus_rows(current_user, limit: 5)
+    @next_open_due_by_project_id = DashboardSentimentSnapshot.next_open_due_dates_by_project(@projects.map(&:id))
   end
 
   def project_stats
