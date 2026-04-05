@@ -38,12 +38,11 @@ class ExtractItemsJob < ApplicationJob
     end
 
     Array(data["action_items"]).each do |a|
-      due = a["due_date"].presence
       meeting.extracted_items.create!(
         item_type: :action_item,
         description: a["description"],
         owner: a["owner"].presence,
-        due_date: due ? Date.parse(due.to_s) : nil,
+        due_date: parse_optional_due_date(a["due_date"]),
         confidence_score: a["confidence"],
         source_quote: a["source_quote"],
         source_timestamp: a["source_timestamp"],
@@ -76,4 +75,21 @@ class ExtractItemsJob < ApplicationJob
     )
     MeetingPipeline.mark_extract!(meeting_id)
   end
+
+  private
+    # LLM output is not guaranteed to be ISO-8601; bad values must not fail the whole job.
+    def parse_optional_due_date(value)
+      return nil if value.blank?
+
+      s = value.to_s.strip
+      return nil if s.blank?
+
+      if (m = s.match(/(\d{4}-\d{2}-\d{2})/))
+        return Date.iso8601(m[1])
+      end
+
+      Date.parse(s)
+    rescue ArgumentError, TypeError, Date::Error
+      nil
+    end
 end
