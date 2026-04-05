@@ -3,6 +3,16 @@
 ## Title
 Meeting Intelligence Hub: AI-Powered Meeting Transcript Analysis and Insights
 
+## Demo
+
+**[Open the interactive demo (Supademo)](https://app.supademo.com/embed/cmnlbv7242us7aburyyp5v4nm?embed_v=2&utm_source=embed)**
+
+<div align="center">
+  <div style="position: relative; box-sizing: content-box; max-height: 80vh; max-height: 80svh; width: 100%; max-width: 960px; aspect-ratio: 1.60; padding: 40px 0 40px 0;">
+    <iframe src="https://app.supademo.com/embed/cmnlbv7242us7aburyyp5v4nm?embed_v=2&utm_source=embed" loading="lazy" title="Meeting Intelligence Hub: AI-Powered Meeting Transcript Analysis and Insights" allow="clipboard-write" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+  </div>
+</div>
+
 ## The Problem
 Teams spend significant time reviewing long meeting transcripts to find action items,
 decisions, and key discussion points. Important context is often missed, and manually
