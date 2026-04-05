@@ -32,7 +32,7 @@
           <% end %>
         </div>
         <div>
-          <%= f.date_field :due_date, class: field, aria: { label: "Due date" } %>
+          <%= f.date_field :due_date, class: "#{field} mi-date-picker-on-dark", aria: { label: "Due date" } %>
         </div>
         <div>
           <%= f.select :status,

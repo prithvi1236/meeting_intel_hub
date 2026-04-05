@@ -38,6 +38,24 @@
       }
       body { font-family: "DM Sans", system-ui, sans-serif; }
       .font-mono-mi { font-family: "DM Mono", ui-monospace, monospace; }
+
+      /* Native <input type="date"> calendar icon is dark by default — lighten on dark fields */
+      html.dark input[type="date"] {
+        color-scheme: dark;
+      }
+      html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        filter: brightness(0) invert(1);
+        opacity: 0.95;
+      }
+      input[type="date"].mi-date-picker-on-dark {
+        color-scheme: dark;
+      }
+      input[type="date"].mi-date-picker-on-dark::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        filter: brightness(0) invert(1);
+        opacity: 0.95;
+      }
     </style>
   </head>
   <body class="h-full bg-[var(--mi-bg)] text-[var(--mi-text)] antialiased">
