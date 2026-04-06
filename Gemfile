@@ -79,6 +79,6 @@ end
 # Postmark HTTPS API delivery (avoids SMTP to smtp.postmarkapp.com, which can time out on some hosts)
 gem "postmark-rails", "~> 0.22"
 # Resend HTTPS API (Postmark fallback — ResendApiSender / MailDeliveryResendFallback)
-gem "resend", "~> 0.8"
+gem "resend", "~> 1.1"
 
 gem "commonmarker", "~> 2.7"
