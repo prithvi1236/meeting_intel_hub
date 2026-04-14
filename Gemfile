@@ -81,4 +81,4 @@ gem "postmark-rails", "~> 0.22"
 # Resend HTTPS API (Postmark fallback — ResendApiSender / MailDeliveryResendFallback)
 gem "resend", "~> 0.8"
 
-gem "commonmarker", "~> 2.7"
+gem "commonmarker", "~> 2.8"
